@@ -1,7 +1,8 @@
 {
   "challenge_id": "aicrowd-neurips-2019-minerl-challenge",
   "grader_id": "aicrowd-neurips-2019-minerl-challenge",
-  "authors": ["aicrowd-bot"],
-  "description": "Test Model for MineRL Challenge",
-  "gpu": false
+  "authors": ["joe_booth"],
+  "description": "Initial Model for MineRL Challenge",
+  "license": "MIT",
+  "gpu": true
 }
