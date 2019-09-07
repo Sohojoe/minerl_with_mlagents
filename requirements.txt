@@ -4,3 +4,7 @@ coloredlogs
 matplotlib
 opencv-python
 pyro4
+
+chainerrl>=0.7.0
+pydot
+matplotlib
