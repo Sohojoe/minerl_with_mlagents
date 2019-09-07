@@ -1,0 +1,10 @@
+name: minerl_challenge
+channels:
+  - defaults
+  - pytorch
+dependencies:
+  - python=3.6
+  - pip
+  - pytorch
+  - torchvision
+  - cudatoolkit=10.0
