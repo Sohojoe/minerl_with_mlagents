@@ -1,5 +1,5 @@
-crowdai_api
 minerl==0.2.3
+crowdai_api
 coloredlogs
 matplotlib
 opencv-python
@@ -9,3 +9,9 @@ packaging
 # chainerrl>=0.7.0
 # pydot
 # matplotlib
+# mlagents_envs==0.9.3
+tensorflow>=1.7,<1.8
+docopt
+pyyaml
+h5py>=2.9.0
+pypiwin32==223;platform_system=="Windows"

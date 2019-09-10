@@ -7,4 +7,4 @@ dependencies:
   - pip
   - pytorch
   - torchvision
-  - cudatoolkit=10.0
+  # - cudatoolkit=10.0
