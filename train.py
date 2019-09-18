@@ -37,6 +37,55 @@ parser = Parser('performance/',
                 submission_timeout=MINERL_TRAINING_TIMEOUT*60,
                 initial_poll_timeout=600)
 
+from typing import Any, Callable, Dict, Optional
+from mlagents.envs.base_unity_environment import BaseUnityEnvironment
+import numpy as np
+from minerl_unity_environment import MineRLUnityEnvironment
+
+def create_environment_factory(
+    env_path: str,
+    docker_target_name: str,
+    no_graphics: bool,
+    seed: Optional[int],
+    start_port: int,
+) -> Callable[[int], BaseUnityEnvironment]:
+    # docker_training = docker_target_name is not None
+    # if docker_training and env_path is not None:
+    #     """
+    #         Comments for future maintenance:
+    #             Some OS/VM instances (e.g. COS GCP Image) mount filesystems
+    #             with COS flag which prevents execution of the Unity scene,
+    #             to get around this, we will copy the executable into the
+    #             container.
+    #         """
+    #     # Navigate in docker path and find env_path and copy it.
+    #     env_path = prepare_for_docker_run(docker_target_name, env_path)
+    docker_training = None
+    seed_count = 10000
+    seed_pool = [np.random.randint(0, seed_count) for _ in range(seed_count)]
+
+    # def create_unity_environment(worker_id: int) -> UnityEnvironment:
+    def create_unity_environment(worker_id: int):
+        env_seed = seed
+        if not env_seed:
+            env_seed = seed_pool[worker_id % len(seed_pool)]
+        env = MineRLUnityEnvironment(
+        # return UnityEnvironment(
+            file_name=env_path,
+            worker_id=worker_id,
+            seed=env_seed,
+            docker_training=docker_training,
+            no_graphics=no_graphics,
+            base_port=start_port,
+        )
+        # env = gym.make(env_path)
+        # TODO create wrapper
+        return env
+
+    return create_unity_environment
+
+
+
 def main():
     """
     This function will be called for training phase.
@@ -45,8 +94,18 @@ def main():
     # http://minerl.io/docs/tutorials/data_sampling.html
     data = minerl.data.make(MINERL_GYM_ENV, data_dir=MINERL_DATA_ROOT)
 
+    from trainer_mlagents import main as unity_main
+    import sys
+    argv = sys.argv[1:]
+    argv.append('config/mlagents_gail_config.yaml')
+    argv.append('--train')
+    argv.append('--env='+MINERL_GYM_ENV)
+    argv.append('--run-id=Hopper301-002')
+    unity_main(argv, create_environment_factory)
+
+
     # Sample code for illustration, add your training code below
-    env = gym.make(MINERL_GYM_ENV)
+    # env = gym.make(MINERL_GYM_ENV)
 
 #     actions = [env.action_space.sample() for _ in range(10)] # Just doing 10 samples in this example
 #     xposes = []
