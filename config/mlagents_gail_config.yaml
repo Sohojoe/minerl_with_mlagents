@@ -30,12 +30,12 @@ MineRLUnityBrain:
     summary_freq: 2000
     time_horizon: 64
     num_layers: 2
-    reward_signals:
-        gail:
-            strength: 1.0
-            gamma: 0.99
-            encoding_size: 128
-            demo_path: demos/ExpertPush.demo
+    # reward_signals:
+    #     gail:
+    #         strength: 1.0
+    #         gamma: 0.99
+    #         encoding_size: 128
+    #         demo_path: demos/ExpertPush.demo
             
 PyramidsLearning:
     summary_freq: 2000

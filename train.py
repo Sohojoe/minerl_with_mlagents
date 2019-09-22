@@ -41,6 +41,7 @@ from typing import Any, Callable, Dict, Optional
 from mlagents.envs.base_unity_environment import BaseUnityEnvironment
 import numpy as np
 from minerl_unity_environment import MineRLUnityEnvironment
+from mlagents.envs import BrainParameters
 
 def create_environment_factory(
     env_path: str,
@@ -92,7 +93,19 @@ def main():
     """
     # How to sample minerl data is document here:
     # http://minerl.io/docs/tutorials/data_sampling.html
-    data = minerl.data.make(MINERL_GYM_ENV, data_dir=MINERL_DATA_ROOT)
+    # data = minerl.data.make(MINERL_GYM_ENV, data_dir=MINERL_DATA_ROOT)
+    MINERL_GYM_ENV = 'MineRLTreechop-v0'
+    # MINERL_GYM_ENV = 'MineRLNavigate-v0'
+    # MINERL_GYM_ENV = 'MineRLNavigateDense-v0'
+    # MINERL_GYM_ENV = 'MineRLNavigateExtreme-v0'
+    # MINERL_GYM_ENV = 'MineRLNavigateExtremeDense-v0'
+    # MINERL_GYM_ENV = 'MineRLObtainIronPickaxe-v0'
+    # MINERL_GYM_ENV = 'MineRLObtainIronPickaxeDense-v0'
+    # MINERL_GYM_ENV = 'MineRLObtainDiamond-v0'
+    # MINERL_GYM_ENV = 'MineRLObtainDiamondDense-v0'
+    #                         # for debug use
+    # MINERL_GYM_ENV = 'MineRLNavigateDenseFixed-v0'
+    # MINERL_GYM_ENV = 'MineRLObtainTest-v0'
 
     from trainer_mlagents import main as unity_main
     import sys
@@ -101,11 +114,19 @@ def main():
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
     argv.append('--run-id=Hopper301-002')
-    unity_main(argv, create_environment_factory)
 
+    # env = MineRLUnityEnvironment(MINERL_GYM_ENV)
+
+    unity_main(argv, create_environment_factory)
+    # gym.envs.registry.env_specs[MINERL_GYM_ENV]
 
     # Sample code for illustration, add your training code below
     # env = gym.make(MINERL_GYM_ENV)
+    # print ('action_space:', env.action_space)
+    # print ('observation_space:', env.observation_space)
+    # print ('reward_range:', env.reward_range)
+    # print ('metadata:', env.metadata)
+    # print ('-----')
 
 #     actions = [env.action_space.sample() for _ in range(10)] # Just doing 10 samples in this example
 #     xposes = []
@@ -125,7 +146,10 @@ def main():
             #>> parser.update_information()
             #>> print(parser.payload)
             # .payload: provide AIcrowd generated json
-            # Example: {'state': 'RUNNING', 'score': {'score': 0.0, 'score_secondary': 0.0}, 'instances': {'1': {'totalNumberSteps': 2001, 'totalNumberEpisodes': 0, 'currentEnvironment': 'MineRLObtainDiamond-v0', 'state': 'IN_PROGRESS', 'episodes': [{'numTicks': 2001, 'environment': 'MineRLObtainDiamond-v0', 'rewards': 0.0, 'state': 'IN_PROGRESS'}], 'score': {'score': 0.0, 'score_secondary': 0.0}}}}
+            # Example: {'state': 'RUNNING', 'score': {'score': 0.0, 'score_secondary': 0.0}, 'instances':
+            #  {'1': {'totalNumberSteps': 2001, 'totalNumberEpisodes': 0, 'currentEnvironment': 'MineRLObtainDiamond-v0',
+            #  'state': 'IN_PROGRESS', 'episodes': [{'numTicks': 2001, 'environment': 'MineRLObtainDiamond-v0',
+            #  'rewards': 0.0, 'state': 'IN_PROGRESS'}], 'score': {'score': 0.0, 'score_secondary': 0.0}}}}
             # .current_state: provide indepth state information avaiable as dictionary (key: instance id)
 
     # Save trained model to train/ directory

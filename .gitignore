@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 
 baselines/general/chainerrl/baselines/results/
+summaries

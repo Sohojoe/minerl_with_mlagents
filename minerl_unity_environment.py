@@ -17,6 +17,7 @@ from mlagents.envs import (
 )
 import gym
 import minerl
+from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
 
 # from mlagents.env.communicator_objects import (
 #     UnityRLInput,
@@ -83,6 +84,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         self.worker_id = worker_id
 
         env = gym.make(file_name)
+        env = MineRLToMLAgentWrapper(env)
         self._loaded = True
 
         # rl_init_parameters_in = UnityRLInitializationInput(seed=seed)
@@ -116,19 +118,24 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         #     )
         #     if brain_param.is_training:
         #         self._external_brain_names += [brain_param.brain_name]
-        brain_name = 'MineRLUnityBrain'
-        self._brain_names.append(brain_name)
-        self._external_brain_names.append(brain_name)
-        self._brains[brain_name] = BrainParameters(
-            brain_name=brain_name,
-            vector_observation_space_size=3,
-            num_stacked_vector_observations=1,
-            camera_resolutions=[], #List[Dict],
-            vector_action_space_size=[], #List[int],
-            vector_action_descriptions=[], #List[str],
-            vector_action_space_type=0 #: int,
-        )
+        # brain_name = 'MineRLUnityBrain'
+        # self._brain_names.append(brain_name)
+        # self._external_brain_names.append(brain_name)
+        # self._brains[brain_name] = BrainParameters(
+        #     brain_name=brain_name,
+        #     vector_observation_space_size=3,
+        #     num_stacked_vector_observations=1,
+        #     camera_resolutions=[], #List[Dict],
+        #     vector_action_space_size=[], #List[int],
+        #     vector_action_descriptions=[], #List[str],
+        #     vector_action_space_type=0 #: int,
+        # )
         self._envs = [env]
+        for e in self._envs:
+            brain = e.brain_parameters
+            self._brain_names.append(brain.brain_name)
+            self._external_brain_names.append(brain.brain_name)
+            self._brains[brain.brain_name] = brain
         self._num_brains = len(self._brain_names)
         self._num_external_brains = len(self._external_brain_names)
         # self._resetParameters = dict(aca_params.environment_parameters.float_parameters)
@@ -342,6 +349,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         #         )
 
         if self._loaded:
+            self._global_done = False
             # outputs = self.communicator.exchange(
             #     self._generate_reset_input(train_mode, config, custom_reset_parameters)
             # )
@@ -353,25 +361,10 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             # for _b in self._external_brain_names:
             #     self._n_agents[_b] = len(s[0][_b].agents)
             # return s[0]
-            all_brain_info = Dict[str, BrainInfo]
+            all_brain_info = dict()
             # for _b in self._external_brain_names:
-            for i, _b in self._external_brain_names: #enumerate(xs)
-                obs = _envs[i].reset()
-                from mlagents.envs.brain import BrainInfo
-                brain_info = BrainInfo(
-                    visual_observation=None,
-                    vector_observation=None,
-                    text_observations=None,
-                    memory=None,
-                    reward=None,
-                    agents=None,
-                    local_done=None,
-                    vector_action=None,
-                    text_action=None,
-                    max_reached=None,
-                    action_mask=None,
-                    custom_observations=None
-                )
+            for i, _b in enumerate(self._external_brain_names): #enumerate(xs)
+                brain_info = self._envs[i].reset()
                 all_brain_info[_b]=brain_info
             return all_brain_info
         else:
@@ -414,7 +407,16 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
                 "You cannot conduct step without first calling reset. "
                 "Reset the environment with 'reset()'"
             )
-        raise UnityActionException("Not Implemented")        
+        else:
+            # vector_action = {self._external_brain_names[0]: vector_action}
+            all_brain_info = dict()
+            # for _b in self._external_brain_names:
+            for i, _b in enumerate(self._external_brain_names): #enumerate(xs)
+                brain_info = self._envs[i].step(vector_action)
+                all_brain_info[_b]=brain_info
+            return all_brain_info
+
+        # raise UnityActionException("Not Implemented")        
         # else:
         #     if isinstance(vector_action, self.SINGLE_BRAIN_ACTION_TYPES):
         #         if self._num_external_brains == 1:

@@ -21,6 +21,7 @@ from mlagents.envs.sampler_class import SamplerManager
 from mlagents.envs.exception import UnityEnvironmentException, SamplerException
 from mlagents.envs.base_unity_environment import BaseUnityEnvironment
 from mlagents.envs.subprocess_env_manager import SubprocessEnvManager
+from mlagents.envs.simple_env_manager import SimpleEnvManager
 
 
 def run_training(
@@ -99,7 +100,12 @@ def run_training(
             run_seed,
             base_port + (sub_id * num_envs),
         )
-    env = SubprocessEnvManager(env_factory, num_envs)
+    
+    # HACK for debug use SimpleEnvManager
+    # env = SubprocessEnvManager(env_factory, num_envs)
+    env = env_factory(0)
+    env = SimpleEnvManager(env)
+
     maybe_meta_curriculum = try_create_meta_curriculum(curriculum_folder, env, lesson)
     sampler_manager, resampling_interval = create_sampler_manager(
         sampler_file_path, env.reset_parameters, run_seed
