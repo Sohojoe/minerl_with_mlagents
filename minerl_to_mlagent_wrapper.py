@@ -103,7 +103,10 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
             action[act_k] = act_v
 
         ob, reward, done, info = self.env.step(action)
-        brain_info = self._create_brain_info(ob, reward, done, info, raw_action_in)
+        if done:
+            brain_info = self.reset()
+        else:
+            brain_info = self._create_brain_info(ob, reward, done, info, raw_action_in)
         return brain_info   
 
     def _create_brain_info(self, ob, reward = None, done = None, info = None, action = None)->BrainInfo:
