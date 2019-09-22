@@ -91,12 +91,14 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
             if act_k == 'camera':
                 # self._mlagent_action_space['camera_left_right']=['noop','camera_left','camera_right']
                 # self._mlagent_action_space['camera_up_down']=['noop','camera_up','camera_down']
+                # VIEW_STEP=90
+                VIEW_STEP=9
                 i = list(self._mlagent_action_space.keys()).index('camera_left_right')
                 v = action_in[i]
-                act_v[0] = -90 if v == 1 else 90 if v == 2 else 0
+                act_v[0] = -VIEW_STEP if v == 1 else VIEW_STEP if v == 2 else 0
                 i = list(self._mlagent_action_space.keys()).index('camera_up_down')
                 v = action_in[i]
-                act_v[1] = -90 if v == 1 else 90 if v == 2 else 0
+                act_v[1] = -VIEW_STEP if v == 1 else VIEW_STEP if v == 2 else 0
             # print(act_k, act_v)
             action[act_k] = act_v
 
