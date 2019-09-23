@@ -108,13 +108,17 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
             action[act_k] = act_v
 
         ob, reward, done, info = self.env.step(action)
+        max_reached = False
+        if 'TimeLimit.truncated' in info:
+            max_reached = True
         if done:
             brain_info = self.reset()
+            brain_info.max_reached = max_reached
         else:
-            brain_info = self._create_brain_info(ob, reward, done, info, raw_action_in)
+            brain_info = self._create_brain_info(ob, reward, done, info, raw_action_in, max_reached)
         return brain_info   
 
-    def _create_brain_info(self, ob, reward = None, done = None, info = None, action = None)->BrainInfo:
+    def _create_brain_info(self, ob, reward = None, done = None, info = None, action = None, max_reached = False)->BrainInfo:
         vector_obs = []
         vis_obs = None
         for k,v in ob.items():
