@@ -94,9 +94,9 @@ def main():
     # How to sample minerl data is document here:
     # http://minerl.io/docs/tutorials/data_sampling.html
     # data = minerl.data.make(MINERL_GYM_ENV, data_dir=MINERL_DATA_ROOT)
-    MINERL_GYM_ENV = 'MineRLTreechop-v0'
+    # MINERL_GYM_ENV = 'MineRLTreechop-v0'
     # MINERL_GYM_ENV = 'MineRLNavigate-v0'
-    # MINERL_GYM_ENV = 'MineRLNavigateDense-v0'
+    MINERL_GYM_ENV = 'MineRLNavigateDense-v0'
     # MINERL_GYM_ENV = 'MineRLNavigateExtreme-v0'
     # MINERL_GYM_ENV = 'MineRLNavigateExtremeDense-v0'
     # MINERL_GYM_ENV = 'MineRLObtainIronPickaxe-v0'

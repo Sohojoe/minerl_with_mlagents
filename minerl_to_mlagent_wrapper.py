@@ -41,13 +41,18 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
                     vector_observation_space_size += len(v)
                 else:
                     raise NotImplementedError
-
-        if 'inventory' in self._minerl_observation_space:
-            for k,v in self._minerl_observation_space['inventory'].spaces.items():
-                if type(v) is minerl.env.spaces.Box:
-                    vector_observation_space_size += 1
-                else:
-                    raise NotImplementedError
+        # Box()
+        for obs in ['compassAngle']:
+            if obs in self._minerl_observation_space:
+                vector_observation_space_size += 1
+        # Dict()
+        for obs in ['inventory']:
+            if obs in self._minerl_observation_space:
+                for k,v in self._minerl_observation_space[obs].spaces.items():
+                    if type(v) is minerl.env.spaces.Box:
+                        vector_observation_space_size += 1
+                    else:
+                        raise NotImplementedError
         num_stacked_vector_observations = int(1)
         camera_resolutions = [{
             "width": self._minerl_observation_space['pov'].shape[0], 
@@ -110,12 +115,22 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         return brain_info   
 
     def _create_brain_info(self, ob, reward = None, done = None, info = None, action = None)->BrainInfo:
-        vis_obs = ob['pov']
+        vector_obs = []
+        vis_obs = None
+        for k,v in ob.items():
+            if k == 'pov':
+                vis_obs = ob['pov']
+            elif type(v) is dict:
+                for a,b in ob['inventory'].items():
+                    vector_obs.append((float)(b))
+            else:
+                vector_obs.append((float)(v))
+        vector_obs = np.array(vector_obs)
         # vis_obs = np.ndarray(vis_obs)
+        vector_obs = vector_obs.reshape(1, vector_obs.shape[0])
         vis_obs = vis_obs.reshape(1, vis_obs.shape[0], vis_obs.shape[1], vis_obs.shape[2])
         vis_obs: List[np.ndarray] = [vis_obs]
         # vis_obs = BrainInfo.process_pixels(vis_obs, False)
-        vector_obs = np.array([])
         text_obs = []
         memory = np.zeros((0, 0))
         rew = [reward] if reward is not None else [0.0]
