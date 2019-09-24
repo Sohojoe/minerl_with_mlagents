@@ -10,7 +10,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
     Specifically, maps observations, actions, rewards, so that we can train with ml-agents
     """
 
-    def __init__(self, env):
+    def __init__(self, env, port):
         gym.Wrapper.__init__(self, env)
         env_id = env.spec.id
 
@@ -32,6 +32,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
                 self._mlagent_action_space[key]=[x for x in self._minerl_action_space[key].values]
 
         brain_name = 'MineRLUnityBrain'
+        self._agent_id = brain_name+'-'+str(port)
         vector_observation_space_size = int(0)
         if 'equipped_items' in self._minerl_observation_space:
             for k,v in self._minerl_observation_space['equipped_items'].spaces['mainhand'].spaces.items():
@@ -111,11 +112,11 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         max_reached = False
         if 'TimeLimit.truncated' in info:
             max_reached = True
-        if done:
-            brain_info = self.reset()
-            brain_info.max_reached = max_reached
-        else:
-            brain_info = self._create_brain_info(ob, reward, done, info, raw_action_in, max_reached)
+        # if done:
+        #     brain_info = self.reset()
+        #     brain_info.max_reached = max_reached
+        # else:
+        brain_info = self._create_brain_info(ob, reward, done, info, raw_action_in, max_reached)
         return brain_info   
 
     def _create_brain_info(self, ob, reward = None, done = None, info = None, action = None, max_reached = False)->BrainInfo:
@@ -142,7 +143,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         vector_action = [action] if action is not None else [None]
         text_action = []
         max_reached = [False]
-        agents=[self]
+        agents=[self._agent_id]
         total_num_actions = sum(self._brain_params.vector_action_space_size)
         mask_actions = np.ones((len(agents), total_num_actions))
         custom_observations = []
@@ -171,7 +172,11 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
 
     @property
     def brain_parameters(self) ->BrainParameters:
-        return self._brain_params     
+        return self._brain_params
+
+    @property
+    def agent_id(self) ->str:
+        return self._agent_id
 
     def debug_print(self, env_name):
         minerl_action_space = gym.envs.registry.env_specs[env_name]._kwargs['action_space'].spaces

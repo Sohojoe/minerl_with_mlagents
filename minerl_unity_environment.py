@@ -84,7 +84,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         self.worker_id = worker_id
 
         env = gym.make(file_name)
-        env = MineRLToMLAgentWrapper(env)
+        env = MineRLToMLAgentWrapper(env, self.port)
         self._loaded = True
 
         # rl_init_parameters_in = UnityRLInitializationInput(seed=seed)
@@ -104,7 +104,10 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         #     )
 
         self._envs = [env]
+        self._agents: Dict[str, str] = {}
         self._n_agents: Dict[str, int] = {}
+        self._agents[env.brain_parameters.brain_name] = env.agent_id
+        self._n_agents[env.brain_parameters.brain_name] = 1
         self._global_done: Optional[bool] = None
         self._academy_name = 'MineRLUnityAcademy'
         self._log_path = 'log_path'
@@ -413,6 +416,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             # for _b in self._external_brain_names:
             for i, _b in enumerate(self._external_brain_names): #enumerate(xs)
                 brain_info = self._envs[i].step(vector_action)
+                self._global_done = True if brain_info.local_done else self._global_done
                 all_brain_info[_b]=brain_info
             return all_brain_info
 
