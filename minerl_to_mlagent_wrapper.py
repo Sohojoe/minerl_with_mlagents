@@ -80,6 +80,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
 
     def step(self, raw_action_in):
         # map mlagent action to minerl
+        # raw_action_in['MineRLUnityBrain'][0] = [1,0,2,0,0,0,0]
         raw_action_in = raw_action_in['MineRLUnityBrain']
         action_in = raw_action_in[0]
         action = self.action_space.sample()
@@ -173,6 +174,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
 
 
     def reset(self):
+        self.env._max_episode_steps = 1000 # HACK
         ob = self.env.reset()
         brain_info = self._create_brain_info(ob)
         return brain_info
