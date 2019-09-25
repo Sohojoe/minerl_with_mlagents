@@ -416,6 +416,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             # for _b in self._external_brain_names:
             for i, _b in enumerate(self._external_brain_names): #enumerate(xs)
                 brain_info = self._envs[i].step(vector_action)
+                brain_info.memories = memory[_b]
                 self._global_done = True if True in brain_info.local_done else self._global_done
                 all_brain_info[_b]=brain_info
             return all_brain_info

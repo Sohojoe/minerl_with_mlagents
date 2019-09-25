@@ -80,8 +80,8 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
 
     def step(self, raw_action_in):
         # map mlagent action to minerl
-        action_in = raw_action_in['MineRLUnityBrain']
-        action_in = action_in[0]
+        raw_action_in = raw_action_in['MineRLUnityBrain']
+        action_in = raw_action_in[0]
         action = self.action_space.sample()
         for act_k in action:
         # for mine_k, mine_v in self._minerl_action_space.items():
@@ -120,6 +120,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         return brain_info   
 
     def _create_brain_info(self, ob, reward = None, done = None, info = None, action = None, max_reached = False)->BrainInfo:
+        
         vector_obs = []
         vis_obs = None
         for k,v in ob.items():
@@ -131,21 +132,27 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
             else:
                 vector_obs.append((float)(v))
         vector_obs = np.array(vector_obs)
-        # vis_obs = np.ndarray(vis_obs)
         vector_obs = vector_obs.reshape(1, vector_obs.shape[0])
-        vis_obs = vis_obs.reshape(1, vis_obs.shape[0], vis_obs.shape[1], vis_obs.shape[2])
-        vis_obs: List[np.ndarray] = [vis_obs]
-        # vis_obs = BrainInfo.process_pixels(vis_obs, False)
+        # vector_obs: List[np.ndarray] = [vector_obs]
+
+        # vis_obs = vis_obs.reshape(1, vis_obs.shape[0], vis_obs.shape[1], vis_obs.shape[2])
+        vis_obs = [[vis_obs]]
+
         text_obs = []
         memory = np.zeros((0, 0))
-        rew = [reward] if reward is not None else [0.0]
+
+        rew = reward if reward is not None else 0.0
+        # rew = np.array(rew)
+        # rew = rew.reshape(1, rew)
+        rew = [rew]
+
         local_done = [done] if done is not None else [False]
-        vector_action = [action] if action is not None else [None]
         text_action = []
         max_reached = [False]
         agents=[self._agent_id]
         total_num_actions = sum(self._brain_params.vector_action_space_size)
         mask_actions = np.ones((len(agents), total_num_actions))
+        vector_action = action if action is not None else np.zeros((len(agents), len(self._brain_params.vector_action_space_size)))
         custom_observations = []
         brain_info = BrainInfo(
             visual_observation=vis_obs,
