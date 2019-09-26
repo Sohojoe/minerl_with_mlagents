@@ -18,6 +18,7 @@ from mlagents.envs import (
 import gym
 import minerl
 from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
+from sohojoe_wrappers import KeyboardControlWrapper
 
 # from mlagents.env.communicator_objects import (
 #     UnityRLInput,
@@ -85,6 +86,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
 
         env = gym.make(file_name)
         env = MineRLToMLAgentWrapper(env, self.port)
+        env = KeyboardControlWrapper(env)
         self._loaded = True
 
         # rl_init_parameters_in = UnityRLInitializationInput(seed=seed)

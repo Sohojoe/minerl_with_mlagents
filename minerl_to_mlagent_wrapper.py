@@ -102,10 +102,10 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
                 VIEW_STEP=9
                 i = list(self._mlagent_action_space.keys()).index('camera_left_right')
                 v = action_in[i]
-                act_v[0] = -VIEW_STEP if v == 1 else VIEW_STEP if v == 2 else 0
+                act_v[1] = -VIEW_STEP if v == 1 else VIEW_STEP if v == 2 else 0
                 i = list(self._mlagent_action_space.keys()).index('camera_up_down')
                 v = action_in[i]
-                act_v[1] = -VIEW_STEP if v == 1 else VIEW_STEP if v == 2 else 0
+                act_v[0] = -VIEW_STEP if v == 1 else VIEW_STEP if v == 2 else 0
             # print(act_k, act_v)
             action[act_k] = act_v
 

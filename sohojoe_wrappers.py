@@ -1,0 +1,214 @@
+import gym
+import time
+import numpy as np
+
+num_actions = 0
+human_wants_restart = False  
+human_agent_action = 0   
+human_sets_pause = False
+human_has_control = False
+human_agent_display = True
+up_key = False
+pause = False
+class KeyboardControlWrapper(gym.Wrapper):
+    def __init__(self, env, set_human_control=False, no_diagnal=False):
+        super(KeyboardControlWrapper, self).__init__(env)   
+        self._env = env
+        self._set_human_control = set_human_control
+        self._no_diagnal = no_diagnal
+        self._last_action = 0
+
+        # env.render()
+        # env.unwrapped.viewer.window.on_key_press = key_press
+        # env.unwrapped.viewer.window.on_key_release = key_release   
+        global human_agent_action, human_wants_restart, human_sets_pause, human_has_control, num_actions, human_agent_display, up_key, pause
+        # num_actions = env.action_space.sp.n
+        human_wants_restart = False  
+        human_agent_action = 0   
+        human_sets_pause = False
+        human_has_control = self._set_human_control
+        human_agent_display = True
+        up_key = False
+        pause = False
+        self._please_lazy_init = True
+        self._last_time = time.time()
+
+
+
+    def action(self, action):
+        global human_agent_action, human_wants_restart, human_sets_pause, human_has_control, num_actions, human_agent_display, up_key, pause
+        def key_press(key, mod):
+            global human_agent_action, human_wants_restart, human_sets_pause, human_has_control, num_actions, human_agent_display, up_key, pause
+            old_action=human_agent_action
+            if key==0xff0d: human_wants_restart = True
+            if key==65307: human_sets_pause = not human_sets_pause
+            if key==65307: human_has_control = not human_has_control
+            if key==65362: # up
+                if human_agent_action == 3: human_agent_action = 6
+                elif human_agent_action == 4: human_agent_action = 7
+                else: human_agent_action = 1 
+                up_key = True
+            if key==65364: human_agent_action = 2 # down
+            if key==65361: # left
+                if human_agent_action == 1: human_agent_action = 6
+                else: human_agent_action = 3
+            if key==65363: # right
+                if human_agent_action == 1: human_agent_action = 7
+                else: human_agent_action = 4
+            # if key==113: human_agent_action = 6 # q forward + left
+            # if key==119: human_agent_action = 1 # w forward
+            # if key==101: human_agent_action = 7 # e forward + right
+            # if key==115: human_agent_action = 2 # s back
+            # if key==97: human_agent_action = 3 # a back
+            # if key==100: human_agent_action = 4 # d back
+            if key==112: 
+                pause = not pause # p pause
+                print ('pause = ', pause)
+                return
+            if key==32: # space
+                human_agent_action = 5 
+            if key==65289: human_agent_display = not human_agent_display
+            # # 65307 # escape
+            # a = int( key - ord('0') ) 
+            # if a <= 0 or a >= num_actions: 
+            #     if old_action is human_agent_action:
+            #         print ('key:', key)
+            #     return
+            # human_agent_action = a
+
+        def key_release(key, mod):
+            global human_agent_action, num_actions, up_key
+            # if key==65362: human_agent_action = 0 # up
+            if key==65364 and human_agent_action==2: # down
+                human_agent_action = 0 
+            # if key==65361: human_agent_action = 0 # left
+            # if key==65363: human_agent_action = 0 # right
+            if key==65362: # up
+                if human_agent_action == 6: human_agent_action = 3
+                elif human_agent_action == 7: human_agent_action = 4
+                elif human_agent_action == 1: human_agent_action=0
+                up_key=False
+            if key==65361: # left
+                if human_agent_action == 6: human_agent_action = 1
+                elif human_agent_action == 3: human_agent_action=0
+            if key==65363: # right
+                if human_agent_action == 7: human_agent_action = 1
+                elif human_agent_action == 4: human_agent_action=0
+
+            if key==32: # space
+                if up_key:
+                    human_agent_action = 1
+                else:
+                    human_agent_action = 0
+            # if key==113: human_agent_action = 0 # q forward + left
+            # if key==119: human_agent_action = 0 # w forward
+            # if key==101: human_agent_action = 0 # e forward + right
+            # if key==115: human_agent_action = 0 # s back
+            # if key==97: human_agent_action = 0 # a back
+            # if key==100: human_agent_action = 0 # d back
+            
+            a = int( key - ord('0') )
+            if a <= 0 or a >= num_actions: return
+            if human_agent_action == a:
+                human_agent_action = 0
+        if self._please_lazy_init and self.viewer is not None:
+            self._please_lazy_init = False
+            self.viewer.window.on_key_press = key_press
+            self.viewer.window.on_key_release = key_release   
+            human_has_control = self._set_human_control
+        if human_has_control:
+            # while pause:
+            #     time.sleep(0.01)
+            while time.time()-self._last_time < 1/10.:
+                time.sleep(0.01)
+            self._last_time = time.time()
+            if self._no_diagnal:
+                if human_agent_action == 6 or human_agent_action == 7:
+                    human_agent_action = self._last_action
+            a = human_agent_action
+            self._last_action = human_agent_action
+            # if human_agent_action is 3 or human_agent_action is 4:
+            #     human_agent_action = 0
+            return a
+        return action
+
+    def step(self, action_in):
+
+        key_action = self.action(0)
+        action_in[self.env.brain_parameters.brain_name].fill(0)
+
+        i_forward_back = list(self.env._mlagent_action_space.keys()).index('forward_back')
+        i_camera_left_right = list(self.env._mlagent_action_space.keys()).index('camera_left_right')
+        i_attack_jump = list(self.env._mlagent_action_space.keys()).index('attack_jump')
+
+        if key_action == 1: # 1 = up
+            action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1
+        elif key_action == 2: # 2 = down
+            action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 2
+        elif key_action == 3: # 3 = left
+            action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 1
+        elif key_action == 4: # 4 = right
+            action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 2
+        elif key_action == 5: # 5 = space / jump
+            action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1 
+            action_in[self.env.brain_parameters.brain_name][0][i_attack_jump] = 2
+        elif key_action == 6: # 6 = up left
+            action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1
+            action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 1
+        elif key_action == 7: # 7 = up right
+            action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1
+            action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 2
+# 0 'attack_jump':['noop', 'attack', 'jump']
+# 1 'camera_left_right':['noop', 'camera_left', 'camera_right']
+# 2 'camera_up_down':['noop', 'camera_up', 'camera_down']
+# 3 'forward_back':['noop', 'forward', 'back']
+# 4 'left_right':['noop', 'left', 'right']
+# 5 'place':['none', 'dirt']
+# 6 'sneak_sprint':['noop', 'sneak', 'sprint']    
+#     
+        brain_info = self.env.step(action_in)
+        self._renderObs([brain_info.visual_observations], True)
+        return brain_info
+
+    def reset(self):
+        return self.env.reset()
+
+    def _renderObs(self, obs, should_render):
+        from gym.envs.classic_control import rendering
+        if self.viewer is None:
+            self.viewer = rendering.SimpleImageViewer()
+        if not should_render:
+            self.viewer.imshow(self._empty)
+            return self.viewer.isopen
+        # if self._has_vector_obs:
+        #     visual_obs = obs['visual'].copy()
+        #     vector_obs = obs['vector'].copy()
+        # else:
+        visual_obs = obs[0][0][0].copy()           
+        # if self._has_vector_obs and self._display_vector_obs:
+        #     w = 84
+        #     # Displays time left and number of keys on visual observation
+        #     key = vector_obs[0:-1]
+        #     time_num = vector_obs[-1]
+        #     key_num = np.argmax(key, axis=0)
+        #     # max_bright = 1
+        #     max_bright = 255
+        #     visual_obs[0:10, :, :] = 0
+        #     for i in range(key_num):
+        #         start = int(i * 16.8) + 4
+        #         end = start + 10
+        #         visual_obs[1:5, start:end, 0:2] = max_bright
+        #     visual_obs[6:10, 0:int(time_num * w), 1] = max_bright    
+        self._8bit = visual_obs
+        # if type(visual_obs[0][0][0]) is np.float32 or type(visual_obs[0][0][0]) is np.float64:
+            # _8bit = (255.0 * visual_obs).astype(np.uint8)
+        self._8bit = ( visual_obs).astype(np.uint8)
+        self.viewer.imshow(self._8bit)
+        return self.viewer.isopen
+
+    @property 
+    def is_paused(self):
+        global pause
+        return pause
+    def render(self, mode='human'):
+        return self._env.render(mode=mode)
