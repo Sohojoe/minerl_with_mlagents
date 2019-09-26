@@ -11,7 +11,7 @@ import minerl
 from utility.parser import Parser
 
 import coloredlogs
-coloredlogs.install(logging.DEBUG)
+# coloredlogs.install(logging.DEBUG)
 
 # All the evaluations will be evaluated on MineRLObtainDiamond-v0 environment
 MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainDiamond-v0')
@@ -113,7 +113,7 @@ def main():
     argv.append('config/mlagents_gail_config.yaml')
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
-    argv.append('--run-id=Hopper301-002')
+    argv.append('--run-id=MineRLNavigateDense-014')
 
     # env = MineRLUnityEnvironment(MINERL_GYM_ENV)
 
@@ -154,7 +154,7 @@ def main():
 
     # Save trained model to train/ directory
     # Training 100% Completed
-    aicrowd_helper.register_progress(1)
+    # aicrowd_helper.register_progress(1)
 
 
 if __name__ == "__main__":
