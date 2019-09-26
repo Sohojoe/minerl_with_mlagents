@@ -143,8 +143,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         memory = np.zeros((0, 0))
 
         rew = reward if reward is not None else 0.0
-        # rew = np.array(rew)
-        # rew = rew.reshape(1, rew)
+        rew = rew if not np.isnan(rew) else 0.0
         rew = [rew]
 
         local_done = [done] if done is not None else [False]
