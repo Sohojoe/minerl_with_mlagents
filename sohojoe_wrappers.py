@@ -1,6 +1,83 @@
 import gym
 import time
 import numpy as np
+from mlagents.envs import AllBrainInfo, BrainInfo, BrainParameters
+
+
+class PruneActionsWrapper(gym.Wrapper):
+    def __init__(self, env, to_prune):
+        super(PruneActionsWrapper, self).__init__(env)   
+        self._to_prune = to_prune
+        self._parent_brain_parameters = env.brain_parameters
+
+        vector_action_space_size = []
+        vector_action_descriptions = []
+        for i in range(len(self._parent_brain_parameters.vector_action_space_size)):
+            description = self._parent_brain_parameters.vector_action_descriptions[i]
+            space_size = self._parent_brain_parameters.vector_action_space_size[i]
+            if description not in self._to_prune:
+                vector_action_space_size.append(space_size)
+                vector_action_descriptions.append(description)
+
+        self._brain_parameters = BrainParameters(
+            brain_name = self._parent_brain_parameters.brain_name,
+            vector_observation_space_size = self._parent_brain_parameters.vector_observation_space_size, 
+            num_stacked_vector_observations = self._parent_brain_parameters.num_stacked_vector_observations,
+            camera_resolutions = self._parent_brain_parameters.camera_resolutions,
+            vector_action_space_size = vector_action_space_size,
+            vector_action_descriptions = vector_action_descriptions,
+            vector_action_space_type = 0)
+
+    def step(self, action_in):
+        actions = {
+            self._brain_parameters.brain_name: self._revert_action(action_in[self._brain_parameters.brain_name])
+        }
+        brain_info = self.env.step(actions)
+        brain_info.previous_vector_actions = action_in[self._brain_parameters.brain_name]
+        total_num_actions = sum(self._brain_parameters.vector_action_space_size)
+        brain_info.action_masks = np.ones((1, total_num_actions))
+        return brain_info
+    
+    def _revert_action(self, action_in):
+        actions = []
+        action_idx = 0
+        for i in range(len(self._parent_brain_parameters.vector_action_space_size)):
+            description = self._parent_brain_parameters.vector_action_descriptions[i]
+            if description not in self._to_prune:
+                action = action_in[0][action_idx]
+                actions.append(action)
+                action_idx += 1
+            else:
+                actions.append(0)
+        actions = np.array(actions)
+        actions = actions.reshape(1, actions.shape[0])
+        return actions
+
+
+    def _convert_action(self, action_in):
+        actions = []
+        for i in range(len(self._parent_brain_parameters.vector_action_space_size)):
+            description = self._parent_brain_parameters.vector_action_descriptions[i]
+            action = action_in[0][i]
+            if description not in self._to_prune:
+                actions.append(action)
+        actions = np.array(actions)
+        actions = actions.reshape(1, actions.shape[0])
+        return actions
+
+
+    def reset(self, **kwargs):
+        brain_info =  self.env.reset(**kwargs)
+        actions = self._convert_action(brain_info.previous_vector_actions)
+        brain_info.previous_vector_actions = actions
+        total_num_actions = sum(self._brain_parameters.vector_action_space_size)
+        brain_info.action_masks = np.ones((1, total_num_actions))
+        return brain_info
+
+    @property
+    def brain_parameters(self) ->BrainParameters:
+        return self._brain_parameters
+
 
 num_actions = 0
 human_wants_restart = False  
@@ -32,8 +109,6 @@ class KeyboardControlWrapper(gym.Wrapper):
         pause = False
         self._please_lazy_init = True
         self._last_time = time.time()
-
-
 
     def action(self, action):
         global human_agent_action, human_wants_restart, human_sets_pause, human_has_control, num_actions, human_agent_display, up_key, pause

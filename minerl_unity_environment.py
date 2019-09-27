@@ -18,7 +18,7 @@ from mlagents.envs import (
 import gym
 import minerl
 from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
-from sohojoe_wrappers import KeyboardControlWrapper
+from sohojoe_wrappers import KeyboardControlWrapper, PruneActionsWrapper
 
 # from mlagents.env.communicator_objects import (
 #     UnityRLInput,
@@ -86,7 +86,16 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
 
         env = gym.make(file_name)
         env = MineRLToMLAgentWrapper(env, self.port)
-        env = KeyboardControlWrapper(env)
+        # env = KeyboardControlWrapper(env)
+        env = PruneActionsWrapper(env, [
+            # 'attack_jump'
+            # ,'camera_left_right'
+            'camera_up_down'
+            # ,'forward_back'
+            ,'left_right'
+            ,'place'
+            ,'sneak_sprint'
+        ])
         self._loaded = True
 
         # rl_init_parameters_in = UnityRLInitializationInput(seed=seed)
