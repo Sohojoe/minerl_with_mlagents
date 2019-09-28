@@ -18,7 +18,7 @@ from mlagents.envs import (
 import gym
 import minerl
 from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
-from sohojoe_wrappers import KeyboardControlWrapper, PruneActionsWrapper
+from sohojoe_wrappers import KeyboardControlWrapper, PruneActionsWrapper, PruneVisualObservationsWrapper
 from sys import platform
 
 logging.basicConfig(level=logging.INFO)
@@ -99,6 +99,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
                 ,'place'
                 ,'sneak_sprint'
             ])
+            env = PruneVisualObservationsWrapper(env)
             brain_name = env.brain_parameters.brain_name
             if brain_name not in self._agent_ids:
                 self._envs[brain_name] = []

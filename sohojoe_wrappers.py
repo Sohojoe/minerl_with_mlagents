@@ -3,6 +3,35 @@ import time
 import numpy as np
 from mlagents.envs import AllBrainInfo, BrainInfo, BrainParameters
 
+class PruneVisualObservationsWrapper(gym.Wrapper):
+    def __init__(self, env):
+        super(PruneVisualObservationsWrapper, self).__init__(env)   
+        self._parent_brain_parameters = env.brain_parameters
+
+        self._brain_parameters = BrainParameters(
+            brain_name = self._parent_brain_parameters.brain_name,
+            vector_observation_space_size = self._parent_brain_parameters.vector_observation_space_size, 
+            num_stacked_vector_observations = self._parent_brain_parameters.num_stacked_vector_observations,
+            camera_resolutions = [],
+            vector_action_space_size = self._parent_brain_parameters.vector_action_space_size,
+            vector_action_descriptions = self._parent_brain_parameters.vector_action_descriptions,
+            vector_action_space_type = 0)   
+        self._brain_parameters.number_visual_observations = 0
+
+    def step(self, action_in):
+        brain_info = self.env.step(action_in)
+        brain_info.visual_observations = []
+        return brain_info
+
+    def reset(self, **kwargs):
+        brain_info =  self.env.reset(**kwargs)
+        brain_info.visual_observations = []
+        return brain_info
+
+    @property
+    def brain_parameters(self) ->BrainParameters:
+        return self._brain_parameters
+
 
 class PruneActionsWrapper(gym.Wrapper):
     def __init__(self, env, to_prune):
