@@ -242,8 +242,8 @@ class KeyboardControlWrapper(gym.Wrapper):
 
     def step(self, action_in):
         global human_has_control
+        key_action = self.action(0)
         if human_has_control:
-            key_action = self.action(0)
             action_in[self.env.brain_parameters.brain_name].fill(0)
 
             i_forward_back = list(self.env._mlagent_action_space.keys()).index('forward_back')
