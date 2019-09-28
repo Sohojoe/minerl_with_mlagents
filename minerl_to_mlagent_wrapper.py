@@ -123,10 +123,12 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
     def _create_brain_info(self, ob, reward = None, done = None, info = None, action = None, max_reached = False)->BrainInfo:
         
         vector_obs = []
-        vis_obs = None
+        vis_obs = []
         for k,v in ob.items():
             if k == 'pov':
-                vis_obs = ob['pov']
+                v = ob['pov']
+                v = v.reshape(1,v.shape[0],v.shape[1],v.shape[2])
+                vis_obs = v
             elif type(v) is dict:
                 for a,b in ob['inventory'].items():
                     vector_obs.append((float)(b))
@@ -137,7 +139,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         # vector_obs: List[np.ndarray] = [vector_obs]
 
         # vis_obs = vis_obs.reshape(1, vis_obs.shape[0], vis_obs.shape[1], vis_obs.shape[2])
-        vis_obs = [[vis_obs]]
+        vis_obs = [vis_obs]
 
         text_obs = []
         memory = np.zeros((0, 0))
@@ -148,7 +150,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
 
         local_done = [done] if done is not None else [False]
         text_action = []
-        max_reached = [False]
+        max_reached = [max_reached]
         agents=[self._agent_id]
         total_num_actions = sum(self._brain_params.vector_action_space_size)
         mask_actions = np.ones((len(agents), total_num_actions))

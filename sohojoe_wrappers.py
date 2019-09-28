@@ -29,11 +29,15 @@ class PruneActionsWrapper(gym.Wrapper):
             vector_action_space_type = 0)
 
     def step(self, action_in):
+        # actions = {
+        #     self._brain_parameters.brain_name: self._revert_action(action_in[self._brain_parameters.brain_name])
+        # }
         actions = {
-            self._brain_parameters.brain_name: self._revert_action(action_in[self._brain_parameters.brain_name])
+            self._brain_parameters.brain_name: self._revert_action(action_in)
         }
         brain_info = self.env.step(actions)
-        brain_info.previous_vector_actions = action_in[self._brain_parameters.brain_name]
+        # brain_info.previous_vector_actions = action_in[self._brain_parameters.brain_name]
+        brain_info.previous_vector_actions = action_in
         total_num_actions = sum(self._brain_parameters.vector_action_space_size)
         brain_info.action_masks = np.ones((1, total_num_actions))
         return brain_info

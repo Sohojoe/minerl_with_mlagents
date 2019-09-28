@@ -66,21 +66,17 @@ def create_environment_factory(
     seed_pool = [np.random.randint(0, seed_count) for _ in range(seed_count)]
 
     # def create_unity_environment(worker_id: int) -> UnityEnvironment:
-    def create_unity_environment(worker_id: int):
-        env_seed = seed
-        if not env_seed:
-            env_seed = seed_pool[worker_id % len(seed_pool)]
+    def create_unity_environment(num_envs: int):
+        seeds = [np.random.randint(0, seed_count) for _ in range(num_envs)]
+        if seed:
+            seeds[0] = seed
         env = MineRLUnityEnvironment(
-        # return UnityEnvironment(
             file_name=env_path,
-            worker_id=worker_id,
-            seed=env_seed,
+            num_envs=num_envs,
+            seeds=seeds,
             docker_training=docker_training,
             no_graphics=no_graphics,
-            base_port=start_port,
         )
-        # env = gym.make(env_path)
-        # TODO create wrapper
         return env
 
     return create_unity_environment
@@ -113,9 +109,12 @@ def main():
     argv.append('config/mlagents_gail_config.yaml')
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
-    argv.append('--run-id=MineRLNavigateDense-014')
+    # argv.append('--num-envs=2')
+    argv.append('--run-id=MineRLNavigateDense-015')
 
     # env = MineRLUnityEnvironment(MINERL_GYM_ENV)
+    from minerl.env.malmo import InstanceManager
+    InstanceManager.MAXINSTANCES = MINERL_TRAINING_MAX_INSTANCES
 
     unity_main(argv, create_environment_factory)
     # gym.envs.registry.env_specs[MINERL_GYM_ENV]
