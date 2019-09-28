@@ -34,8 +34,8 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         self,
         seeds: [int],
         file_name: Optional[str] = None,
-        # worker_id: int = 0,
-        # base_port: int = 5005,
+        worker_id: int = 0,
+        base_port: int = 9001,
         docker_training: bool = False,
         no_graphics: bool = False,
         # timeout_wait: int = 30,
@@ -80,6 +80,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         self._brains: Dict[str, BrainParameters] = {}
         self._brain_names: List[str] = []
         self._external_brain_names: List[str] = []
+        InstanceManager.configure_malmo_base_port(base_port+worker_id)
         
         for i in range(num_envs):
             print ('InstanceManager:', InstanceManager)

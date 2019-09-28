@@ -66,13 +66,16 @@ def create_environment_factory(
     seed_pool = [np.random.randint(0, seed_count) for _ in range(seed_count)]
 
     # def create_unity_environment(worker_id: int) -> UnityEnvironment:
-    def create_unity_environment(num_envs: int):
+    # def create_unity_environment(num_envs: int):
+    def create_unity_environment(worker_id: int):
+        num_envs=1
         seeds = [np.random.randint(0, seed_count) for _ in range(num_envs)]
         if seed:
             seeds[0] = seed
         env = MineRLUnityEnvironment(
             file_name=env_path,
             num_envs=num_envs,
+            worker_id=worker_id,
             seeds=seeds,
             docker_training=docker_training,
             no_graphics=no_graphics,
@@ -110,11 +113,13 @@ def main():
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
     # argv.append('--num-envs=2')
+    argv.append('--num-envs=5')
     argv.append('--run-id=MineRLNavigateDense-015')
 
     # env = MineRLUnityEnvironment(MINERL_GYM_ENV)
     from minerl.env.malmo import InstanceManager
     InstanceManager.MAXINSTANCES = MINERL_TRAINING_MAX_INSTANCES
+    # InstanceManager.allocate_pool(5)
 
     unity_main(argv, create_environment_factory)
     # gym.envs.registry.env_specs[MINERL_GYM_ENV]

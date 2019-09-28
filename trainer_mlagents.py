@@ -102,9 +102,9 @@ def run_training(
         )
     
     # HACK for debug use SimpleEnvManager
-    # env = SubprocessEnvManager(env_factory, num_envs)
-    env = env_factory(num_envs)
-    env = SimpleEnvManager(env)
+    env = SubprocessEnvManager(env_factory, num_envs)
+    # env = env_factory(num_envs)
+    # env = SimpleEnvManager(env)
 
     maybe_meta_curriculum = try_create_meta_curriculum(curriculum_folder, env, lesson)
     sampler_manager, resampling_interval = create_sampler_manager(
