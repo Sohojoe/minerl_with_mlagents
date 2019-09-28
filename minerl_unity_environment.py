@@ -68,7 +68,8 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             None
         )  # The process that is started. If None, no process was started
         # self.communicator = self.get_communicator(worker_id, base_port, timeout_wait)
-        # self.worker_id = worker_id
+        
+        self._worker_id = worker_id
 
         from minerl.env.malmo import InstanceManager
         self._envs: Dict[str, [Env]] = {}
@@ -90,7 +91,8 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             print ('.DEFAULT_IP', InstanceManager.DEFAULT_IP)
             env = gym.make(file_name)
             env = MineRLToMLAgentWrapper(env, seeds[i])
-            # env = KeyboardControlWrapper(env)
+            if self.worker_id is 0:
+                env = KeyboardControlWrapper(env)
             env = PruneActionsWrapper(env, [
                 # 'attack_jump'
                 # ,'camera_left_right'
@@ -164,6 +166,10 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
     def get_communicator(worker_id, base_port, timeout_wait):
         # return RpcCommunicator(worker_id, base_port, timeout_wait)
         return None
+
+    @property
+    def worker_id(self):
+        return self._worker_id
 
     @property
     def external_brains(self):

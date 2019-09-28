@@ -2,6 +2,7 @@ import gym
 from mlagents.envs import BrainInfo, BrainParameters
 import minerl
 import numpy as np
+from typing import Any, Callable, Dict, Generator, List, TypeVar
 
 
 class MineRLToMLAgentWrapper(gym.Wrapper):
@@ -34,8 +35,10 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         brain_name = 'MineRLUnityBrain'
         self._agent_id = brain_name+'-'+str(port)
         vector_observation_space_size = int(0)
+        self._vector_obs_keys: Dict[str, float] = dict()
         if 'equipped_items' in self._minerl_observation_space:
             for k,v in self._minerl_observation_space['equipped_items'].spaces['mainhand'].spaces.items():
+                self._vector_obs_keys['equipped_items.'+k]=vector_observation_space_size
                 if type(v) is minerl.env.spaces.Box:
                     vector_observation_space_size += 1
                 elif type(v) is minerl.env.spaces.Enum:
@@ -45,10 +48,12 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         # Box()
         for obs in ['compassAngle']:
             if obs in self._minerl_observation_space:
+                self._vector_obs_keys[obs]=vector_observation_space_size
                 vector_observation_space_size += 1
         # Dict()
         for obs in ['inventory']:
             if obs in self._minerl_observation_space:
+                self._vector_obs_keys[obs]=vector_observation_space_size
                 for k,v in self._minerl_observation_space[obs].spaces.items():
                     if type(v) is minerl.env.spaces.Box:
                         vector_observation_space_size += 1
@@ -175,7 +180,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
 
 
     def reset(self):
-        self.env._max_episode_steps = 1000 # HACK
+        # self.env._max_episode_steps = 1000 # HACK
         ob = self.env.reset()
         brain_info = self._create_brain_info(ob)
         return brain_info
@@ -183,6 +188,10 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
     @property
     def brain_parameters(self) ->BrainParameters:
         return self._brain_params
+
+    @property
+    def vector_obs_keys(self) ->Dict[str, int]:
+        return self._vector_obs_keys
 
     @property
     def agent_id(self) ->str:

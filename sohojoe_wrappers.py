@@ -241,31 +241,32 @@ class KeyboardControlWrapper(gym.Wrapper):
         return action
 
     def step(self, action_in):
+        global human_has_control
+        if human_has_control:
+            key_action = self.action(0)
+            action_in[self.env.brain_parameters.brain_name].fill(0)
 
-        key_action = self.action(0)
-        action_in[self.env.brain_parameters.brain_name].fill(0)
+            i_forward_back = list(self.env._mlagent_action_space.keys()).index('forward_back')
+            i_camera_left_right = list(self.env._mlagent_action_space.keys()).index('camera_left_right')
+            i_attack_jump = list(self.env._mlagent_action_space.keys()).index('attack_jump')
 
-        i_forward_back = list(self.env._mlagent_action_space.keys()).index('forward_back')
-        i_camera_left_right = list(self.env._mlagent_action_space.keys()).index('camera_left_right')
-        i_attack_jump = list(self.env._mlagent_action_space.keys()).index('attack_jump')
-
-        if key_action == 1: # 1 = up
-            action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1
-        elif key_action == 2: # 2 = down
-            action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 2
-        elif key_action == 3: # 3 = left
-            action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 1
-        elif key_action == 4: # 4 = right
-            action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 2
-        elif key_action == 5: # 5 = space / jump
-            action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1 
-            action_in[self.env.brain_parameters.brain_name][0][i_attack_jump] = 2
-        elif key_action == 6: # 6 = up left
-            action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1
-            action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 1
-        elif key_action == 7: # 7 = up right
-            action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1
-            action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 2
+            if key_action == 1: # 1 = up
+                action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1
+            elif key_action == 2: # 2 = down
+                action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 2
+            elif key_action == 3: # 3 = left
+                action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 1
+            elif key_action == 4: # 4 = right
+                action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 2
+            elif key_action == 5: # 5 = space / jump
+                action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1 
+                action_in[self.env.brain_parameters.brain_name][0][i_attack_jump] = 2
+            elif key_action == 6: # 6 = up left
+                action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1
+                action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 1
+            elif key_action == 7: # 7 = up right
+                action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1
+                action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 2
 # 0 'attack_jump':['noop', 'attack', 'jump']
 # 1 'camera_left_right':['noop', 'camera_left', 'camera_right']
 # 2 'camera_up_down':['noop', 'camera_up', 'camera_down']
@@ -275,13 +276,14 @@ class KeyboardControlWrapper(gym.Wrapper):
 # 6 'sneak_sprint':['noop', 'sneak', 'sprint']    
 #     
         brain_info = self.env.step(action_in)
-        self._renderObs([brain_info.visual_observations], True)
+        self._renderObs(brain_info, True)
         return brain_info
 
     def reset(self):
         return self.env.reset()
 
-    def _renderObs(self, obs, should_render):
+    def _renderObs(self, brain_info, should_render):
+        # brain_info.visual_observations, brain_info.vector_observations
         from gym.envs.classic_control import rendering
         if self.viewer is None:
             self.viewer = rendering.SimpleImageViewer()
@@ -292,16 +294,50 @@ class KeyboardControlWrapper(gym.Wrapper):
         #     visual_obs = obs['visual'].copy()
         #     vector_obs = obs['vector'].copy()
         # else:
-        visual_obs = obs[0][0][0].copy()           
+        visual_obs = brain_info.visual_observations[0][0].copy()           
         # if self._has_vector_obs and self._display_vector_obs:
-        #     w = 84
+        if True:
+            w = 84
+            # max_bright = 1
+            max_bright = 255
         #     # Displays time left and number of keys on visual observation
-        #     key = vector_obs[0:-1]
-        #     time_num = vector_obs[-1]
-        #     key_num = np.argmax(key, axis=0)
-        #     # max_bright = 1
-        #     max_bright = 255
-        #     visual_obs[0:10, :, :] = 0
+            visual_obs[0:10, :, :] = 0
+            vector_obs:Dict[str, float] = dict()
+            i = 0
+            v = brain_info.rewards[0]
+            start = int(i * 16.8) + 4
+            if v > 0:
+                v = min(1.,v)
+                v = int(w*v)
+                v = max(1,v)
+                end = start + v
+                visual_obs[6:10, start:end, 0:1] = max_bright
+            elif v < 0:
+                v = max(-1.,v)
+                v = int(w*v)
+                v = min(-1,v)
+                end = start - v
+                visual_obs[6:10, start:end, 1:2] = max_bright
+            i = 0
+            for k,v in self.vector_obs_keys.items():
+                v = brain_info.vector_observations[0][v]
+                if k in 'compassAngle':
+                    v = v/180.
+                vector_obs[k]=v
+                start = int(i * 16.8) + 4
+                if v > 0:
+                    v = min(1.,v)
+                    end = start + int(10.*v)
+                    visual_obs[1:5, start:end, 0:1] = max_bright
+                elif v < 0:
+                    v = max(-1.,v)
+                    end = start - int(10.*v)
+                    visual_obs[1:5, start:end, 1:2] = max_bright
+                i += 1
+
+            key = list(vector_obs.values())[0]
+            time_num = list(vector_obs.values())[1]
+            # key_num = np.argmax(key, axis=0)
         #     for i in range(key_num):
         #         start = int(i * 16.8) + 4
         #         end = start + 10
@@ -310,7 +346,7 @@ class KeyboardControlWrapper(gym.Wrapper):
         self._8bit = visual_obs
         # if type(visual_obs[0][0][0]) is np.float32 or type(visual_obs[0][0][0]) is np.float64:
             # _8bit = (255.0 * visual_obs).astype(np.uint8)
-        self._8bit = ( visual_obs).astype(np.uint8)
+        # self._8bit = ( visual_obs).astype(np.uint8)
         self.viewer.imshow(self._8bit)
         return self.viewer.isopen
 

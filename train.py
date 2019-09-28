@@ -112,9 +112,9 @@ def main():
     argv.append('config/mlagents_gail_config.yaml')
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
-    # argv.append('--num-envs=2')
-    argv.append('--num-envs=5')
     argv.append('--run-id=MineRLNavigateDense-015')
+    argv.append('--num-envs=2')
+    # argv.append('--num-envs=5')
 
     # env = MineRLUnityEnvironment(MINERL_GYM_ENV)
     from minerl.env.malmo import InstanceManager
