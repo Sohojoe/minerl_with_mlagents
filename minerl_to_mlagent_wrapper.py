@@ -99,14 +99,19 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         for act_k in action:
         # for mine_k, mine_v in self._minerl_action_space.items():
             act_v = action[act_k]
+            try:
+                for i,k in enumerate(act_v):
+                    act_v[i] = -1
+            except TypeError:
+                act_v = -1
             if act_k in ['forward', 'back', 'left', 'right', 'sneak', 'sprint', 'jump', 'attack']:
                 for i, v in enumerate(self._mlagent_action_space.items()): 
                     if act_k in v[0] and act_k in v[1]:
                         act_v = type(act_v) (action_in[i] == v[1].index(act_k))
             if act_k in ['craft', 'equip', 'nearbyCraft', 'nearbySmelt', 'place']:
                 for i, v in enumerate(self._mlagent_action_space.items()): 
-                    if act_k in v[0] and act_k in v[1]:
-                        act_v = type(act_v) (action_in[i] == v[1].index(act_k))
+                    if act_k in v[0] and act_k:
+                        act_v = type(act_v) (action_in[i])
             if act_k == 'camera':
                 # self._mlagent_action_space['camera_left_right']=['noop','camera_left','camera_right']
                 # self._mlagent_action_space['camera_up_down']=['noop','camera_up','camera_down']
@@ -119,13 +124,66 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
                 v = action_in[i]
                 act_v[0] = -VIEW_STEP if v == 1 else VIEW_STEP if v == 2 else 0
             # print(act_k, act_v)
+            try:
+                for i,k in enumerate(act_v):
+                    if k == -1:
+                        raise NotImplementedError('_process_action key error '+ act_k)
+            except TypeError:
+                if act_v == -1:
+                    raise NotImplementedError('_process_action key error '+ act_k)
             action[act_k] = act_v
         return action
 
-    def _process_brain_info(self, brain_info, raw_action_in):
+    def _process_brain_info(self, brain_info:BrainInfo, raw_action_in=None):
+        if raw_action_in is None:
+            raw_action_in = brain_info.previous_vector_actions
         # brain_info.previous_vector_actions = raw_action_in
         # total_num_actions = sum(self.brain_parameters.vector_action_space_size)
         # brain_info.action_masks = np.ones((1, total_num_actions))
+        return brain_info
+
+    def _revert_actions(self, brain_info:BrainInfo):
+        action_in = brain_info.previous_vector_actions
+        action = np.zeros(len(self._mlagent_action_space),dtype=int)
+        i = 0
+        for k,v in self._mlagent_action_space.items():
+            VIEW_STEP=9
+            if k == 'camera_left_right':
+                velocity = action_in['camera'][1]
+                rand = np.random.random_sample() * VIEW_STEP
+                if velocity > 0 and velocity > rand:
+                    action[i]=2
+                elif velocity < 0 and velocity < -rand:
+                    action[i]=1
+            elif k == 'camera_up_down':
+                velocity = action_in['camera'][0]
+                rand = np.random.random_sample() * VIEW_STEP
+                if velocity > 0 and velocity > rand:
+                    action[i]=2
+                elif velocity < 0 and velocity < -rand:
+                    action[i]=1
+            elif k in ['craft', 'equip', 'nearbyCraft', 'nearbySmelt', 'place']:
+                action[i]=action_in[k]
+            else:
+                for move_i, move in enumerate(v):
+                    if move in action_in and action_in[move] == 1:
+                        action[i]=move_i
+            i += 1    
+        brain_info.previous_vector_actions = [action]
+        # TODO action masks
+        # vector_action_space_size = [len(v) for k,v in self._mlagent_action_space.items()]
+        return brain_info
+
+    def process_demonstrations(self, brain_info: BrainInfo):
+        # revert action
+        debug_original_actions = brain_info.previous_vector_actions
+        brain_info = self._revert_actions(brain_info)
+        # debug check
+        # debug_reverted_actions = brain_info.previous_vector_actions
+        # debug_reverted_actions = {self.env.spec.id:debug_reverted_actions}
+        # debug_check = self._process_action(debug_original_actions)
+        # procress brain_info
+        brain_info = self._process_brain_info(brain_info)
         return brain_info
 
 
@@ -159,6 +217,16 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
     @staticmethod
     def get_brain_params(brain_name)->BrainParameters:
         brain_params = MineRLToMLAgentWrapper.static_brain_params[brain_name]
+        env = MineRLToMLAgentWrapper.static_wrapped_env[brain_name]
+        envs = []
+        wrapped_env = env
+        while True:
+            if hasattr(wrapped_env, 'process_demonstrations'):
+                envs.append(wrapped_env)
+            wrapped_env = wrapped_env.env
+            if not hasattr(wrapped_env, 'env'):
+                break 
+        brain_params = envs[-1].brain_parameters
         return brain_params
 
     @staticmethod
@@ -167,16 +235,19 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         MineRLToMLAgentWrapper.static_brain_params[brain_name] = wrapped_env.brain_parameters
 
     @staticmethod
-    def process_obs_through_wrapped_env(brain_name: str, obs):
+    def process_brain_info_through_wrapped_envs(brain_name: str, brain_info: BrainInfo):
         env = MineRLToMLAgentWrapper.static_wrapped_env[brain_name]
-        env.is_processing_obs = True
-        obs = env.step(obs)
-        env.is_processing_obs = False
-        return obs
-
-    @property
-    def is_processing_obs(self)-> bool:
-        return self._is_processing_obs
+        envs = []
+        wrapped_env = env
+        while True:
+            if hasattr(wrapped_env, 'process_demonstrations'):
+                envs.append(wrapped_env)
+            wrapped_env = wrapped_env.env
+            if not hasattr(wrapped_env, 'env'):
+                break
+        for wrapped_env in reversed(envs):
+            brain_info = wrapped_env.process_demonstrations(brain_info)
+        return brain_info
 
     @staticmethod
     def create_brain_info(

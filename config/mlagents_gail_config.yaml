@@ -34,13 +34,12 @@ MineRLNavigateDense-v0:
     vis_encode_type: simple
     # use_recurrent: true
     normalize: true
-    # reward_signals:
-    #     gail:
-    #         strength: 1.0
-    #         gamma: 0.99
-    #         encoding_size: 128
-    #         # demo_path: demos/ExpertPush.demo
-    #         demo_path: MineRLNavigateDense-v0
+    reward_signals:
+        gail:
+            strength: 1.0
+            gamma: 0.99
+            encoding_size: 128
+            demo_path: MineRLNavigateDense-v0
             
 PyramidsLearning:
     summary_freq: 2000

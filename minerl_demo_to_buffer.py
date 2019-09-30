@@ -57,7 +57,7 @@ def demo_to_buffer(
         for i, frame in enumerate(demo.data_frames):
             ob=frame[0]
             action=frame[1]
-            action=np.hstack([v for v in action.values()])
+            # action=np.hstack([v for v in action.values()])
             reward=float(frame[2])
             ob=frame[3]
             done=frame[4]
@@ -77,6 +77,8 @@ def demo_to_buffer(
                 agent_id=agent_id, brain_params=brain_params, 
                 reward = reward, done = done, 
                 info = info, action = action, max_reached = max_reached)
+            brain_info = MineRLToMLAgentWrapper.process_brain_info_through_wrapped_envs(
+                file_path, brain_info)
             brain_infos.append(brain_info)
 
 

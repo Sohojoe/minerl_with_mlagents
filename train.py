@@ -117,6 +117,7 @@ def main():
     argv.append('--run-id=MineRLNavigateDense-031')
     # argv.append('--num-envs=2')
     # argv.append('--num-envs=5')
+    argv.append('--run-id=MineRLNavigateDense-018')
 
     # env = MineRLUnityEnvironment(MINERL_GYM_ENV)
     from minerl.env.malmo import InstanceManager

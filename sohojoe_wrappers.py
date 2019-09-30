@@ -21,11 +21,20 @@ class PruneVisualObservationsWrapper(gym.Wrapper):
     def _process_action(self, raw_action_in):
         return raw_action_in
 
-    def _process_brain_info(self, brain_info, raw_action_in):
+    def _process_brain_info(self, brain_info:BrainInfo, raw_action_in=None):
+        if raw_action_in is None:
+            raw_action_in = brain_info.previous_vector_actions
         brain_info.visual_observations = []
         # brain_info.previous_vector_actions = raw_action_in
         # total_num_actions = sum(self.brain_parameters.vector_action_space_size)
         # brain_info.action_masks = np.ones((1, total_num_actions))
+        return brain_info
+
+    def process_demonstrations(self, brain_info):
+        # revert action
+        # brain_info = self._revert_actions(brain_info)
+        # procress brain_info
+        brain_info = self._process_brain_info(brain_info)
         return brain_info
 
     def step(self, raw_action_in):
@@ -77,10 +86,21 @@ class PruneActionsWrapper(gym.Wrapper):
         }        
         return actions
 
-    def _process_brain_info(self, brain_info, raw_action_in):
+    def _process_brain_info(self, brain_info:BrainInfo, raw_action_in=None):
+        if raw_action_in is None:
+            raw_action_in = brain_info.previous_vector_actions
         brain_info.previous_vector_actions = raw_action_in
         total_num_actions = sum(self.brain_parameters.vector_action_space_size)
         brain_info.action_masks = np.ones((1, total_num_actions))
+        return brain_info
+
+    def process_demonstrations(self, brain_info):
+        # revert action
+        actions = brain_info.previous_vector_actions
+        actions = self._convert_action(actions)
+        brain_info.previous_vector_actions = actions
+        # procress brain_info
+        brain_info = self._process_brain_info(brain_info)
         return brain_info
 
     def step(self, raw_action_in):
@@ -296,10 +316,19 @@ class KeyboardControlWrapper(gym.Wrapper):
 #            
         return action_in
 
-    def _process_brain_info(self, brain_info, raw_action_in):
+    def _process_brain_info(self, brain_info:BrainInfo, raw_action_in=None):
+        if raw_action_in is None:
+            raw_action_in = brain_info.previous_vector_actions
         # brain_info.previous_vector_actions = raw_action_in
         # total_num_actions = sum(self.brain_parameters.vector_action_space_size)
         # brain_info.action_masks = np.ones((1, total_num_actions))
+        return brain_info
+
+    def process_demonstrations(self, brain_info):
+        # revert action
+        # brain_info = self._revert_actions(brain_info)
+        # procress brain_info
+        brain_info = self._process_brain_info(brain_info)
         return brain_info
 
     def step(self, raw_action_in):
