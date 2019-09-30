@@ -3,6 +3,7 @@ from mlagents.envs import BrainInfo, BrainParameters
 import minerl
 import numpy as np
 from typing import Any, Callable, Dict, Generator, List, TypeVar
+from collections import OrderedDict
 
 
 class MineRLToMLAgentWrapper(gym.Wrapper):
@@ -10,10 +11,14 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
 
     Specifically, maps observations, actions, rewards, so that we can train with ml-agents
     """
+    # static 
+    static_brain_params:Dict[str, BrainParameters] = dict()
+    static_wrapped_env: Dict[str, gym.Wrapper] = dict()
 
     def __init__(self, env, port):
-        gym.Wrapper.__init__(self, env)
+        super(MineRLToMLAgentWrapper, self).__init__(env)   
         env_id = env.spec.id
+        self._is_processing_obs = False
 
         self._minerl_action_space = gym.envs.registry.env_specs[env_id]._kwargs['action_space'].spaces
         self._minerl_observation_space = gym.envs.registry.env_specs[env_id]._kwargs['observation_space'].spaces
@@ -32,7 +37,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
             if key in self._minerl_action_space: 
                 self._mlagent_action_space[key]=[x for x in self._minerl_action_space[key].values]
 
-        brain_name = 'MineRLUnityBrain'
+        brain_name = env_id
         self._agent_id = brain_name+'-'+str(port)
         vector_observation_space_size = int(0)
         self._vector_obs_keys: Dict[str, float] = dict()
@@ -82,11 +87,13 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
             vector_action_descriptions, 
             vector_action_space_type
             )
+        if brain_name not in MineRLToMLAgentWrapper.static_brain_params:
+            MineRLToMLAgentWrapper.static_brain_params[brain_name] = self._brain_params
 
-    def step(self, raw_action_in):
+    def _process_action(self, raw_action_in):
         # map mlagent action to minerl
-        # raw_action_in['MineRLUnityBrain'][0] = [1,0,2,0,0,0,0]
-        raw_action_in = raw_action_in['MineRLUnityBrain']
+        # map mlagent action to minerl
+        raw_action_in = raw_action_in[self.env.spec.id]
         action_in = raw_action_in[0]
         action = self.action_space.sample()
         for act_k in action:
@@ -113,8 +120,19 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
                 act_v[0] = -VIEW_STEP if v == 1 else VIEW_STEP if v == 2 else 0
             # print(act_k, act_v)
             action[act_k] = act_v
+        return action
 
-        ob, reward, done, info = self.env.step(action)
+    def _process_brain_info(self, brain_info, raw_action_in):
+        # brain_info.previous_vector_actions = raw_action_in
+        # total_num_actions = sum(self.brain_parameters.vector_action_space_size)
+        # brain_info.action_masks = np.ones((1, total_num_actions))
+        return brain_info
+
+
+    def step(self, raw_action_in):
+        processed_action = self._process_action(raw_action_in)
+
+        ob, reward, done, info = self.env.step(processed_action)
         max_reached = False
         if 'TimeLimit.truncated' in info:
             max_reached = True
@@ -122,11 +140,49 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         #     brain_info = self.reset()
         #     brain_info.max_reached = max_reached
         # else:
-        brain_info = self._create_brain_info(ob, reward, done, info, raw_action_in, max_reached)
+        brain_info = self._create_brain_info(ob, reward, done, info, raw_action_in[self.env.spec.id], max_reached)
+        brain_info = self._process_brain_info(brain_info, raw_action_in[self.env.spec.id])
         return brain_info   
 
     def _create_brain_info(self, ob, reward = None, done = None, info = None, action = None, max_reached = False)->BrainInfo:
-        
+        return MineRLToMLAgentWrapper.create_brain_info(
+            ob=ob,
+            agent_id=self._agent_id,
+            brain_params=self._brain_params,
+            reward=reward,
+            done = done, 
+            info = info, 
+            action = action,
+            max_reached = max_reached
+        )
+
+    @staticmethod
+    def get_brain_params(brain_name)->BrainParameters:
+        brain_params = MineRLToMLAgentWrapper.static_brain_params[brain_name]
+        return brain_params
+
+    @staticmethod
+    def set_wrappers_for_pretraining(brain_name: str, wrapped_env: gym.Wrapper):
+        MineRLToMLAgentWrapper.static_wrapped_env[brain_name] = wrapped_env
+        MineRLToMLAgentWrapper.static_brain_params[brain_name] = wrapped_env.brain_parameters
+
+    @staticmethod
+    def process_obs_through_wrapped_env(brain_name: str, obs):
+        env = MineRLToMLAgentWrapper.static_wrapped_env[brain_name]
+        env.is_processing_obs = True
+        obs = env.step(obs)
+        env.is_processing_obs = False
+        return obs
+
+    @property
+    def is_processing_obs(self)-> bool:
+        return self._is_processing_obs
+
+    @staticmethod
+    def create_brain_info(
+        ob, agent_id, brain_params, reward = None, done = None, 
+        info = None, action = None, max_reached = False
+        )->BrainInfo:
         vector_obs = []
         vis_obs = []
         for k,v in ob.items():
@@ -134,7 +190,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
                 v = ob['pov']
                 v = v.reshape(1,v.shape[0],v.shape[1],v.shape[2])
                 vis_obs = v
-            elif type(v) is dict:
+            elif type(v) is dict or type(v) is OrderedDict:
                 for a,b in ob['inventory'].items():
                     vector_obs.append((float)(b))
             else:
@@ -156,10 +212,10 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         local_done = [done] if done is not None else [False]
         text_action = []
         max_reached = [max_reached]
-        agents=[self._agent_id]
-        total_num_actions = sum(self._brain_params.vector_action_space_size)
+        agents=[agent_id]
+        total_num_actions = sum(brain_params.vector_action_space_size)
         mask_actions = np.ones((len(agents), total_num_actions))
-        vector_action = action if action is not None else np.zeros((len(agents), len(self._brain_params.vector_action_space_size)))
+        vector_action = action if action is not None else np.zeros((len(agents), len(brain_params.vector_action_space_size)))
         custom_observations = []
         brain_info = BrainInfo(
             visual_observation=vis_obs,

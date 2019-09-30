@@ -9,7 +9,8 @@ from mlagents.trainers.components.reward_signals import RewardSignal, RewardSign
 from mlagents.trainers.tf_policy import TFPolicy
 from mlagents.trainers.models import LearningModel
 from .model import GAILModel
-from mlagents.trainers.demo_loader import demo_to_buffer
+# from mlagents.trainers.demo_loader import demo_to_buffer
+from minerl_demo_to_buffer import demo_to_buffer
 
 LOGGER = logging.getLogger("mlagents.trainers")
 

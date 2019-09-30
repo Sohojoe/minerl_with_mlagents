@@ -106,6 +106,8 @@ def main():
     # MINERL_GYM_ENV = 'MineRLNavigateDenseFixed-v0'
     # MINERL_GYM_ENV = 'MineRLObtainTest-v0'
 
+    os.environ['MINERL_DATA_ROOT']=MINERL_DATA_ROOT
+
     from trainer_mlagents import main as unity_main
     import sys
     argv = sys.argv[1:]

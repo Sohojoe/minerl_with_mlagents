@@ -103,6 +103,9 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
                 ,'sneak_sprint'
             ])
             env = PruneVisualObservationsWrapper(env)
+
+            MineRLToMLAgentWrapper.set_wrappers_for_pretraining(file_name, env)
+
             brain_name = env.brain_parameters.brain_name
             if brain_name not in self._agent_ids:
                 self._envs[brain_name] = []

@@ -21,9 +21,9 @@ default:
             strength: 1.0
             gamma: 0.99
 
-MineRLUnityBrain:
-    max_steps: 5.0e4
-    batch_size: 64
+MineRLNavigateDense-v0:
+    max_steps: 10.0e5
+    batch_size: 32
     memory_size: 128
     buffer_size: 2048
     # beta: 1.0e-2
@@ -31,15 +31,16 @@ MineRLUnityBrain:
     summary_freq: 2000
     time_horizon: 256
     num_layers: 2
-    use_recurrent: true
+    vis_encode_type: simple
+    # use_recurrent: true
     normalize: true
-
     # reward_signals:
     #     gail:
     #         strength: 1.0
     #         gamma: 0.99
     #         encoding_size: 128
-    #         demo_path: demos/ExpertPush.demo
+    #         # demo_path: demos/ExpertPush.demo
+    #         demo_path: MineRLNavigateDense-v0
             
 PyramidsLearning:
     summary_freq: 2000

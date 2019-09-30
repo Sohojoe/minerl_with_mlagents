@@ -18,9 +18,20 @@ class PruneVisualObservationsWrapper(gym.Wrapper):
             vector_action_space_type = 0)   
         self._brain_parameters.number_visual_observations = 0
 
-    def step(self, action_in):
-        brain_info = self.env.step(action_in)
+    def _process_action(self, raw_action_in):
+        return raw_action_in
+
+    def _process_brain_info(self, brain_info, raw_action_in):
         brain_info.visual_observations = []
+        # brain_info.previous_vector_actions = raw_action_in
+        # total_num_actions = sum(self.brain_parameters.vector_action_space_size)
+        # brain_info.action_masks = np.ones((1, total_num_actions))
+        return brain_info
+
+    def step(self, raw_action_in):
+        action_in = self._process_action(raw_action_in)
+        brain_info = self.env.step(action_in)
+        brain_info = self._process_brain_info(brain_info, raw_action_in)
         return brain_info
 
     def reset(self, **kwargs):
@@ -57,18 +68,25 @@ class PruneActionsWrapper(gym.Wrapper):
             vector_action_descriptions = vector_action_descriptions,
             vector_action_space_type = 0)
 
-    def step(self, action_in):
+    def _process_action(self, action_in):
         # actions = {
-        #     self._brain_parameters.brain_name: self._revert_action(action_in[self._brain_parameters.brain_name])
+        #     self.brain_parameters.brain_name: self._revert_action(action_in[self.brain_parameters.brain_name])
         # }
         actions = {
-            self._brain_parameters.brain_name: self._revert_action(action_in)
-        }
-        brain_info = self.env.step(actions)
-        # brain_info.previous_vector_actions = action_in[self._brain_parameters.brain_name]
-        brain_info.previous_vector_actions = action_in
-        total_num_actions = sum(self._brain_parameters.vector_action_space_size)
+            self.brain_parameters.brain_name: self._revert_action(action_in)
+        }        
+        return actions
+
+    def _process_brain_info(self, brain_info, raw_action_in):
+        brain_info.previous_vector_actions = raw_action_in
+        total_num_actions = sum(self.brain_parameters.vector_action_space_size)
         brain_info.action_masks = np.ones((1, total_num_actions))
+        return brain_info
+
+    def step(self, raw_action_in):
+        action_in = self._process_action(raw_action_in)
+        brain_info = self.env.step(action_in)
+        brain_info = self._process_brain_info(brain_info, raw_action_in)
         return brain_info
     
     def _revert_action(self, action_in):
@@ -103,7 +121,7 @@ class PruneActionsWrapper(gym.Wrapper):
         brain_info =  self.env.reset(**kwargs)
         actions = self._convert_action(brain_info.previous_vector_actions)
         brain_info.previous_vector_actions = actions
-        total_num_actions = sum(self._brain_parameters.vector_action_space_size)
+        total_num_actions = sum(self.brain_parameters.vector_action_space_size)
         brain_info.action_masks = np.ones((1, total_num_actions))
         return brain_info
 
@@ -240,7 +258,8 @@ class KeyboardControlWrapper(gym.Wrapper):
             return a
         return action
 
-    def step(self, action_in):
+
+    def _process_action(self, action_in):
         global human_has_control
         key_action = self.action(0)
         if human_has_control:
@@ -274,8 +293,20 @@ class KeyboardControlWrapper(gym.Wrapper):
 # 4 'left_right':['noop', 'left', 'right']
 # 5 'place':['none', 'dirt']
 # 6 'sneak_sprint':['noop', 'sneak', 'sprint']    
-#     
+#            
+        return action_in
+
+    def _process_brain_info(self, brain_info, raw_action_in):
+        # brain_info.previous_vector_actions = raw_action_in
+        # total_num_actions = sum(self.brain_parameters.vector_action_space_size)
+        # brain_info.action_masks = np.ones((1, total_num_actions))
+        return brain_info
+
+    def step(self, raw_action_in):
+        action_in = self._process_action(raw_action_in)
+ 
         brain_info = self.env.step(action_in)
+        brain_info = self._process_brain_info(brain_info, raw_action_in)
         self._renderObs(brain_info, True)
         return brain_info
 
