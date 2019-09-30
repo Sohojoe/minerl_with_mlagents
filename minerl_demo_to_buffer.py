@@ -81,7 +81,17 @@ def demo_to_buffer(
                 file_path, brain_info)
             brain_infos.append(brain_info)
 
+            del frame[3] # obs, free for memory
+        del demo.data_frames
+        del demo
+        import gc
+        gc.collect()
 
     # brain_params, brain_infos, _ = load_demonstration(file_path)
     demo_buffer = make_demo_buffer(brain_infos, brain_params, sequence_length)
+
+    del brain_infos
+    import gc
+    gc.collect()
+
     return brain_params, demo_buffer
