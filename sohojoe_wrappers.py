@@ -387,3 +387,29 @@ class KeyboardControlWrapper(gym.Wrapper):
         return pause
     def render(self, mode='human'):
         return self._env.render(mode=mode)
+
+class VisualObsAsFloatWrapper(gym.Wrapper):
+    def __init__(self, env):
+        super(VisualObsAsFloatWrapper, self).__init__(env)   
+
+    def _process_action(self, raw_action_in):
+        return raw_action_in
+
+    def _process_brain_info(self, brain_info, raw_action_in=None):
+        if len(brain_info.visual_observations) > 0:
+            visual_obs = brain_info.visual_observations[0]
+            visual_obs = (visual_obs / 255.0).astype(np.float)
+            brain_info.visual_observations[0] = visual_obs
+
+        return brain_info
+
+    def step(self, raw_action_in):
+        action_in = self._process_action(raw_action_in)
+        brain_info = self.env.step(action_in)
+        brain_info = self._process_brain_info(brain_info, raw_action_in)
+        return brain_info
+
+    def reset(self, **kwargs):
+        brain_info =  self.env.reset(**kwargs)
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info

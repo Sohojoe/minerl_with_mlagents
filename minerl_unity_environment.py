@@ -18,7 +18,10 @@ from mlagents.envs import (
 import gym
 import minerl
 from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
-from sohojoe_wrappers import KeyboardControlWrapper, PruneActionsWrapper, PruneVisualObservationsWrapper
+from sohojoe_wrappers import (
+    KeyboardControlWrapper, PruneActionsWrapper, PruneVisualObservationsWrapper,
+    VisualObsAsFloatWrapper
+)
 from sys import platform
 
 logging.basicConfig(level=logging.INFO)
@@ -102,7 +105,8 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
                 ,'place'
                 ,'sneak_sprint'
             ])
-            env = PruneVisualObservationsWrapper(env)
+            # env = PruneVisualObservationsWrapper(env)
+            env = VisualObsAsFloatWrapper(env)
 
             MineRLToMLAgentWrapper.set_wrappers_for_pretraining(file_name, env)
 
