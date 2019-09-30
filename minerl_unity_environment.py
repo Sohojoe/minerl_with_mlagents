@@ -102,7 +102,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
                 ,'place'
                 ,'sneak_sprint'
             ])
-            env = PruneVisualObservationsWrapper(env)
+            # env = PruneVisualObservationsWrapper(env)
 
             MineRLToMLAgentWrapper.set_wrappers_for_pretraining(file_name, env)
 
