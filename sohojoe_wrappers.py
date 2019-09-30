@@ -429,7 +429,13 @@ class VisualObsAsFloatWrapper(gym.Wrapper):
             visual_obs = brain_info.visual_observations[0]
             visual_obs = (visual_obs / 255.0).astype(np.float)
             brain_info.visual_observations[0] = visual_obs
+        return brain_info
 
+    def process_demonstrations(self, brain_info):
+        # revert action
+        # brain_info = self._revert_actions(brain_info)
+        # procress brain_info
+        brain_info = self._process_brain_info(brain_info)
         return brain_info
 
     def step(self, raw_action_in):
