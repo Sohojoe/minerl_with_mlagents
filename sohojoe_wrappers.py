@@ -32,7 +32,6 @@ class PruneVisualObservationsWrapper(gym.Wrapper):
 
     def process_demonstrations(self, brain_info):
         # revert action
-        # brain_info = self._revert_actions(brain_info)
         # procress brain_info
         brain_info = self._process_brain_info(brain_info)
         return brain_info
@@ -78,9 +77,6 @@ class PruneActionsWrapper(gym.Wrapper):
             vector_action_space_type = 0)
 
     def _process_action(self, action_in):
-        # actions = {
-        #     self.brain_parameters.brain_name: self._revert_action(action_in[self.brain_parameters.brain_name])
-        # }
         actions = {
             self.brain_parameters.brain_name: self._revert_action(action_in)
         }        
@@ -326,7 +322,6 @@ class KeyboardControlWrapper(gym.Wrapper):
 
     def process_demonstrations(self, brain_info):
         # revert action
-        # brain_info = self._revert_actions(brain_info)
         # procress brain_info
         brain_info = self._process_brain_info(brain_info)
         return brain_info
@@ -433,7 +428,6 @@ class VisualObsAsFloatWrapper(gym.Wrapper):
 
     def process_demonstrations(self, brain_info):
         # revert action
-        # brain_info = self._revert_actions(brain_info)
         # procress brain_info
         brain_info = self._process_brain_info(brain_info)
         return brain_info
@@ -464,6 +458,56 @@ class NormalizeObservationsWrapper(gym.Wrapper):
             if k in ['inventory']:
                 v = v/5. # 5 is a lot of an object
             brain_info.vector_observations[0][i] = v
+        return brain_info
+
+    def process_demonstrations(self, brain_info):
+        # revert action
+        action_in = brain_info.previous_vector_actions
+        action_out = self._process_action(action_in)
+        brain_info.previous_vector_actions = action_out
+        # procress brain_info
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info
+
+    def step(self, raw_action_in):
+        action_in = self._process_action(raw_action_in)
+        brain_info = self.env.step(action_in)
+        brain_info = self._process_brain_info(brain_info, raw_action_in)
+        return brain_info
+
+    def reset(self, **kwargs):
+        brain_info =  self.env.reset(**kwargs)
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info
+
+class HardwireActionsWrapper(gym.Wrapper):
+    def __init__(self, env):
+        super(HardwireActionsWrapper, self).__init__(env)   
+
+    def _process_action(self, raw_action_in):
+        action_in = raw_action_in
+        if self.brain_parameters.brain_name in raw_action_in:
+            action_in = raw_action_in[self.brain_parameters.brain_name]
+        actions = []
+        action_idx = 0
+        for i in range(len(self.brain_parameters.vector_action_space_size)):
+            description = self.brain_parameters.vector_action_descriptions[i]
+            action = action_in[0][action_idx]
+            if description == 'forward_back':
+                action = 1
+            elif description == 'attack_jump':
+                action = 2
+            elif description == 'sneak_sprint':
+                action = 2
+            actions.append(action)
+            action_idx += 1
+        actions = np.array(actions)
+        actions = actions.reshape(1, actions.shape[0])
+        if self.brain_parameters.brain_name in raw_action_in:
+            actions = {self.brain_parameters.brain_name: actions}
+        return actions
+        
+    def _process_brain_info(self, brain_info, raw_action_in=None):
         return brain_info
 
     def process_demonstrations(self, brain_info):

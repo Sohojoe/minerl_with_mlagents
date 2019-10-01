@@ -20,7 +20,7 @@ import minerl
 from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
 from sohojoe_wrappers import (
     KeyboardControlWrapper, PruneActionsWrapper, PruneVisualObservationsWrapper,
-    VisualObsAsFloatWrapper, NormalizeObservationsWrapper
+    VisualObsAsFloatWrapper, NormalizeObservationsWrapper, HardwireActionsWrapper
 )
 from sys import platform
 
@@ -97,17 +97,18 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             env = NormalizeObservationsWrapper(env)
             if self.worker_id is 0:
                 env = KeyboardControlWrapper(env)
+            env = HardwireActionsWrapper(env)
             env = PruneActionsWrapper(env, [
-                # 'attack_jump'
+                'attack_jump'
                 # ,'camera_left_right'
-                'camera_up_down'
-                # ,'forward_back'
+                ,'camera_up_down'
+                ,'forward_back'
                 ,'left_right'
                 ,'place'
                 ,'sneak_sprint'
             ])
-            # env = PruneVisualObservationsWrapper(env)
-            env = VisualObsAsFloatWrapper(env)
+            env = PruneVisualObservationsWrapper(env)
+            # env = VisualObsAsFloatWrapper(env)
 
             MineRLToMLAgentWrapper.set_wrappers_for_pretraining(file_name, env)
 
