@@ -381,8 +381,8 @@ class KeyboardControlWrapper(gym.Wrapper):
             i = 0
             for k,v in self.vector_obs_keys.items():
                 v = brain_info.vector_observations[0][v]
-                if k in 'compassAngle':
-                    v = v/180.
+                # if k in 'compassAngle':
+                #     v = v/180.
                 vector_obs[k]=v
                 start = int(i * 16.8) + 4
                 if v > 0:
@@ -434,6 +434,43 @@ class VisualObsAsFloatWrapper(gym.Wrapper):
     def process_demonstrations(self, brain_info):
         # revert action
         # brain_info = self._revert_actions(brain_info)
+        # procress brain_info
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info
+
+    def step(self, raw_action_in):
+        action_in = self._process_action(raw_action_in)
+        brain_info = self.env.step(action_in)
+        brain_info = self._process_brain_info(brain_info, raw_action_in)
+        return brain_info
+
+    def reset(self, **kwargs):
+        brain_info =  self.env.reset(**kwargs)
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info
+
+class NormalizeObservationsWrapper(gym.Wrapper):
+    def __init__(self, env):
+        super(NormalizeObservationsWrapper, self).__init__(env)   
+
+    def _process_action(self, raw_action_in):
+        return raw_action_in
+
+    def _process_brain_info(self, brain_info, raw_action_in=None):
+        for k,i in self.vector_obs_keys.items():
+            v = brain_info.vector_observations[0][i]
+            if k in ['compassAngle']:
+                v = v/180.
+            if k in ['inventory']:
+                v = v/5. # 5 is a lot of an object
+            brain_info.vector_observations[0][i] = v
+        return brain_info
+
+    def process_demonstrations(self, brain_info):
+        # revert action
+        action_in = brain_info.previous_vector_actions
+        action_out = self._process_action(action_in)
+        brain_info.previous_vector_actions = action_out
         # procress brain_info
         brain_info = self._process_brain_info(brain_info)
         return brain_info

@@ -20,7 +20,7 @@ import minerl
 from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
 from sohojoe_wrappers import (
     KeyboardControlWrapper, PruneActionsWrapper, PruneVisualObservationsWrapper,
-    VisualObsAsFloatWrapper
+    VisualObsAsFloatWrapper, NormalizeObservationsWrapper
 )
 from sys import platform
 
@@ -94,6 +94,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             print ('.DEFAULT_IP', InstanceManager.DEFAULT_IP)
             env = gym.make(file_name)
             env = MineRLToMLAgentWrapper(env, seeds[i])
+            env = NormalizeObservationsWrapper(env)
             if self.worker_id is 0:
                 env = KeyboardControlWrapper(env)
             env = PruneActionsWrapper(env, [
