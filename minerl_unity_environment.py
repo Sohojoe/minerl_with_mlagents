@@ -20,7 +20,8 @@ import minerl
 from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
 from sohojoe_wrappers import (
     KeyboardControlWrapper, PruneActionsWrapper, PruneVisualObservationsWrapper,
-    VisualObsAsFloatWrapper, NormalizeObservationsWrapper, HardwireActionsWrapper
+    VisualObsAsFloatWrapper, NormalizeObservationsWrapper, HardwireActionsWrapper,
+    RefineObservationsWrapper
 )
 from sys import platform
 
@@ -94,20 +95,21 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             print ('.DEFAULT_IP', InstanceManager.DEFAULT_IP)
             env = gym.make(file_name)
             env = MineRLToMLAgentWrapper(env, seeds[i])
+            env = RefineObservationsWrapper(env)
             env = NormalizeObservationsWrapper(env)
             if self.worker_id is 0:
                 env = KeyboardControlWrapper(env)
-            env = HardwireActionsWrapper(env)
+            # env = HardwireActionsWrapper(env)
             env = PruneActionsWrapper(env, [
-                'attack_jump'
-                ,'camera_left_right'
-                # ,'camera_up_down'
-                ,'forward_back'
-                # ,'left_right'
+                # 'attack_jump'
+                # ,'camera_left_right'
+                'camera_up_down'
+                # ,'forward_back'
+                ,'left_right'
                 # ,'place'
-                # ,'sneak_sprint'
+                ,'sneak_sprint'
             ])
-            env = PruneVisualObservationsWrapper(env)
+            # env = PruneVisualObservationsWrapper(env)
             # env = VisualObsAsFloatWrapper(env)
 
             MineRLToMLAgentWrapper.set_wrappers_for_pretraining(file_name, env)

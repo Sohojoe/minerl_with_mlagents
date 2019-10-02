@@ -372,13 +372,13 @@ class KeyboardControlWrapper(gym.Wrapper):
                 v = int(w*v)
                 v = max(1,v)
                 end = start + v
-                visual_obs[6:10, start:end, 0:1] = max_bright
+                visual_obs[6:10, start:end, 1:2] = max_bright
             elif v < 0:
                 v = max(-1.,v)
                 v = int(w*v)
                 v = min(-1,v)
                 end = start - v
-                visual_obs[6:10, start:end, 1:2] = max_bright
+                visual_obs[6:10, start:end, 0:1] = max_bright
             i = 0
             for k,v in self.vector_obs_keys.items():
                 v = brain_info.vector_observations[0][v]
@@ -389,11 +389,11 @@ class KeyboardControlWrapper(gym.Wrapper):
                 if v > 0:
                     v = min(1.,v)
                     end = start + int(10.*v)
-                    visual_obs[1:5, start:end, 0:1] = max_bright
+                    visual_obs[1:5, start:end, 1:2] = max_bright
                 elif v < 0:
                     v = max(-1.,v)
                     end = start - int(10.*v)
-                    visual_obs[1:5, start:end, 1:2] = max_bright
+                    visual_obs[1:5, start:end, 0:1] = max_bright
                 i += 1
 
             key = list(vector_obs.values())[0]
@@ -535,3 +535,80 @@ class HardwireActionsWrapper(gym.Wrapper):
         brain_info =  self.env.reset(**kwargs)
         brain_info = self._process_brain_info(brain_info)
         return brain_info
+
+class RefineObservationsWrapper(gym.Wrapper):
+    def __init__(self, env):
+        super(RefineObservationsWrapper, self).__init__(env)   
+        self._parent_brain_parameters = env.brain_parameters
+
+        self._brain_parameters = BrainParameters(
+            brain_name = self._parent_brain_parameters.brain_name,
+            vector_observation_space_size = self._parent_brain_parameters.vector_observation_space_size, 
+            num_stacked_vector_observations = self._parent_brain_parameters.num_stacked_vector_observations,
+            camera_resolutions = self._parent_brain_parameters.camera_resolutions,
+            vector_action_space_size = self._parent_brain_parameters.vector_action_space_size,
+            vector_action_descriptions = self._parent_brain_parameters.vector_action_descriptions,
+            vector_action_space_type = 0)
+        
+        if 'compassAngle' in self.vector_obs_keys:
+            i = self.brain_parameters.vector_observation_space_size
+            self.vector_obs_keys['north'] = i
+            i += 1
+            self.vector_obs_keys['east'] = i
+            i += 1
+            self.vector_obs_keys['south'] = i
+            i += 1
+            self.vector_obs_keys['west'] = i
+            i += 1
+            self.brain_parameters.vector_observation_space_size = i
+
+    def _process_action(self, raw_action_in):
+        return raw_action_in
+        
+    def _process_brain_info(self, brain_info:BrainInfo, raw_action_in=None):
+        obs = np.zeros(
+            (brain_info.vector_observations.shape[0],self.brain_parameters.vector_observation_space_size), 
+            float)
+        for k,i in self.vector_obs_keys.items():
+            try:
+                v = brain_info.vector_observations[0][i]
+                if k == 'compassAngle':
+                    compassAngle = v
+                    north = max(0, abs(180 - (compassAngle) % 360) - 90) / 90.
+                    east  = max(0, abs(180 - (compassAngle + 90) % 360) - 90) / 90.
+                    south = max(0, abs(180 - (compassAngle + 180) % 360) - 90) / 90.
+                    west  = max(0, abs(180 - (compassAngle + 270) % 360) - 90) / 90.
+            except IndexError:
+                pass
+            if k in ['north']:
+                v = north
+            elif k in ['east']:
+                v = east
+            elif k in ['south']:
+                v = south
+            elif k in ['west']:
+                v = west
+            obs[0][i] = v
+        brain_info.vector_observations = obs
+        return brain_info
+
+    def process_demonstrations(self, brain_info):
+        # revert action
+        # procress brain_info
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info
+
+    def step(self, raw_action_in):
+        action_in = self._process_action(raw_action_in)
+        brain_info = self.env.step(action_in)
+        brain_info = self._process_brain_info(brain_info, raw_action_in)
+        return brain_info
+
+    def reset(self, **kwargs):
+        brain_info =  self.env.reset(**kwargs)
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info
+
+    @property
+    def brain_parameters(self) ->BrainParameters:
+        return self._brain_parameters
