@@ -101,13 +101,13 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
                 env = KeyboardControlWrapper(env)
             # env = HardwireActionsWrapper(env)
             env = PruneActionsWrapper(env, [
-                # 'attack_jump'
-                # ,'camera_left_right'
-                'camera_up_down'
-                # ,'forward_back'
-                ,'left_right'
-                # ,'place'
-                ,'sneak_sprint'
+            #    # 'attack_jump'
+            #    # ,'camera_left_right'
+            #    'camera_up_down'
+            #    # ,'forward_back'
+            #    ,'left_right'
+            #    # ,'place'
+            #    ,'sneak_sprint'
             ])
             # env = PruneVisualObservationsWrapper(env)
             # env = VisualObsAsFloatWrapper(env)
