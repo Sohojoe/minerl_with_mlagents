@@ -281,27 +281,33 @@ class KeyboardControlWrapper(gym.Wrapper):
         if human_has_control:
             action_in[self.env.brain_parameters.brain_name].fill(0)
 
-            i_forward_back = list(self.env._mlagent_action_space.keys()).index('forward_back')
-            i_camera_left_right = list(self.env._mlagent_action_space.keys()).index('camera_left_right')
-            i_attack_jump = list(self.env._mlagent_action_space.keys()).index('attack_jump')
+            i_forward_back = -1
+            i_camera_left_right = -1
+            i_attack_jump = -1
+            try:
+                i_camera_left_right = self.brain_parameters.vector_action_descriptions.index('camera_left_right')
+                i_forward_back = self.env.brain_parameters.vector_action_descriptions.index('forward_back')
+                i_attack_jump = self.env.brain_parameters.vector_action_descriptions.index('attack_jump')
+            except AttributeError:
+                pass
 
-            if key_action == 1: # 1 = up
-                action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1
-            elif key_action == 2: # 2 = down
-                action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 2
-            elif key_action == 3: # 3 = left
-                action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 1
-            elif key_action == 4: # 4 = right
-                action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 2
+            if key_action == 1 and i_forward_back > -1: # 1 = up
+                action_in[self.brain_parameters.brain_name][0][i_forward_back] = 1
+            elif key_action == 2 and i_forward_back > -1: # 2 = down
+                action_in[self.brain_parameters.brain_name][0][i_forward_back] = 2
+            elif key_action == 3 and i_camera_left_right > -1: # 3 = left
+                action_in[self.brain_parameters.brain_name][0][i_camera_left_right] = 1
+            elif key_action == 4 and i_camera_left_right > -1: # 4 = right
+                action_in[self.brain_parameters.brain_name][0][i_camera_left_right] = 2
             elif key_action == 5: # 5 = space / jump
-                action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1 
-                action_in[self.env.brain_parameters.brain_name][0][i_attack_jump] = 2
-            elif key_action == 6: # 6 = up left
-                action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1
-                action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 1
-            elif key_action == 7: # 7 = up right
-                action_in[self.env.brain_parameters.brain_name][0][i_forward_back] = 1
-                action_in[self.env.brain_parameters.brain_name][0][i_camera_left_right] = 2
+                action_in[self.brain_parameters.brain_name][0][i_forward_back] = 1 
+                action_in[self.brain_parameters.brain_name][0][i_attack_jump] = 2
+            elif key_action == 6 and i_forward_back > -1 and i_camera_left_right > -1: # 6 = up left
+                action_in[self.brain_parameters.brain_name][0][i_forward_back] = 1
+                action_in[self.brain_parameters.brain_name][0][i_camera_left_right] = 1
+            elif key_action == 7 and i_forward_back > -1 and i_camera_left_right > -1: # 7 = up right
+                action_in[self.brain_parameters.brain_name][0][i_forward_back] = 1
+                action_in[self.brain_parameters.brain_name][0][i_camera_left_right] = 2
 # 0 'attack_jump':['noop', 'attack', 'jump']
 # 1 'camera_left_right':['noop', 'camera_left', 'camera_right']
 # 2 'camera_up_down':['noop', 'camera_up', 'camera_down']

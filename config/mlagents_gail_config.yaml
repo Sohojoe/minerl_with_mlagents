@@ -33,7 +33,7 @@ MineRLNavigateDense-v0:
     num_layers: 2
     vis_encode_type: simple
     # use_recurrent: true
-    normalize: true
+    # normalize: true
     # pretraining:
     #     demo_path: MineRLNavigateDense-v0
     #     strength: 0.5
