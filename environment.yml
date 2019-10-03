@@ -5,6 +5,8 @@ channels:
 dependencies:
   - python=3.6
   - pip
-  - pytorch
-  - torchvision
+  # - pytorch
+  # - torchvision
   # - cudatoolkit=10.0
+  - tensorflow=1.14
+  # - tensorflow-gpu=1.14

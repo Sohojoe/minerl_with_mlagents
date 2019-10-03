@@ -43,6 +43,10 @@ import numpy as np
 from minerl_unity_environment import MineRLUnityEnvironment
 from mlagents.envs import BrainParameters
 
+# HACK for macOS for multiple libiomp5.dylib issue 
+# https://github.com/openai/spinningup/issues/16
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 def create_environment_factory(
     env_path: str,
     docker_target_name: str,
@@ -114,7 +118,7 @@ def main():
     argv.append('config/mlagents_gail_config.yaml')
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
-    argv.append('--run-id=MineRLNavigateDense-032')
+    argv.append('--run-id=MineRLNavigateDense-050')
     # argv.append('--num-envs=2')
     # argv.append('--num-envs=5')
 

@@ -612,3 +612,25 @@ class RefineObservationsWrapper(gym.Wrapper):
     @property
     def brain_parameters(self) ->BrainParameters:
         return self._brain_parameters
+
+class ResetOnDoneWrapper(gym.Wrapper):
+    def __init__(self, env):
+        super(ResetOnDoneWrapper, self).__init__(env)   
+        self._should_reset = False
+
+    def step(self, raw_action_in)->BrainInfo:
+        if self._should_reset:
+            self.reset()
+            # make action = no op
+            for action in raw_action_in:
+                for i, k in enumerate(action):
+                    action[i] = 0
+
+        brain_info = self.env.step(raw_action_in)
+        self._should_reset |= brain_info.local_done[0]
+        return brain_info
+
+    def reset(self, **kwargs):
+        brain_info =  self.env.reset(**kwargs)
+        self._should_reset = False        
+        return brain_info

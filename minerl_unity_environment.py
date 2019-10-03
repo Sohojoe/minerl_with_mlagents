@@ -15,13 +15,29 @@ from mlagents.envs import (
     UnityActionException,
     UnityTimeOutException,
 )
+
+from mlagents.envs.communicator_objects.unity_rl_input_pb2 import UnityRLInput
+from mlagents.envs.communicator_objects.unity_rl_output_pb2 import UnityRLOutput
+from mlagents.envs.communicator_objects.agent_action_proto_pb2 import AgentActionProto
+from mlagents.envs.communicator_objects.environment_parameters_proto_pb2 import (
+    EnvironmentParametersProto,
+)
+from mlagents.envs.communicator_objects.unity_rl_initialization_input_pb2 import (
+    UnityRLInitializationInput,
+)
+from mlagents.envs.communicator_objects.unity_rl_initialization_output_pb2 import (
+    UnityRLInitializationOutput,
+)
+from mlagents.envs.communicator_objects.unity_input_pb2 import UnityInput
+from mlagents.envs.communicator_objects.custom_action_pb2 import CustomAction
+
 import gym
 import minerl
 from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
 from sohojoe_wrappers import (
     KeyboardControlWrapper, PruneActionsWrapper, PruneVisualObservationsWrapper,
     VisualObsAsFloatWrapper, NormalizeObservationsWrapper, HardwireActionsWrapper,
-    RefineObservationsWrapper
+    RefineObservationsWrapper, ResetOnDoneWrapper
 )
 from sys import platform
 
@@ -32,18 +48,18 @@ logger = logging.getLogger("mlagents.envs")
 class MineRLUnityEnvironment(BaseUnityEnvironment):
     SCALAR_ACTION_TYPES = (int, np.int32, np.int64, float, np.float32, np.float64)
     SINGLE_BRAIN_ACTION_TYPES = SCALAR_ACTION_TYPES + (list, np.ndarray)
-    SINGLE_BRAIN_TEXT_TYPES = (str, list, np.ndarray)
+    SINGLE_BRAIN_TEXT_TYPES = list
 
     def __init__(
         self,
         seeds: [int],
         file_name: Optional[str] = None,
         worker_id: int = 0,
-        base_port: int = 9001,
+        base_port: int = 5005,
         docker_training: bool = False,
         no_graphics: bool = False,
         # timeout_wait: int = 30,
-        # args: list = [],
+        # args: Optional[List[str]] = None,
         num_envs: int = 1
     ):
         """
@@ -58,13 +74,12 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         :bool no_graphics: Whether to run the Unity simulator in no-graphics mode
         :int timeout_wait: Time (in seconds) to wait for connection from environment.
         :bool train_mode: Whether to run in training mode, speeding up the simulation, by default.
-        :list args: Addition Unity command line arguments
         """
 
         atexit.register(self._close)
-        # self.port = base_port + worker_id
+        self.port = base_port + worker_id
         self._buffer_size = 12000
-        # self._version_ = "API-9"
+        self._version_ = "API-10"
         self._loaded = (
             False
         )  # If true, this means the environment was successfully loaded
@@ -74,12 +89,12 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         # self.communicator = self.get_communicator(worker_id, base_port, timeout_wait)
         
         self._worker_id = worker_id
+        self._is_first_message = True
 
         from minerl.env.malmo import InstanceManager
         self._envs: Dict[str, [Env]] = {}
         self._agent_ids: Dict[str, [str]] = {}
         self._n_agents: Dict[str, int] = {}
-        self._global_done: Optional[bool] = None
         self._academy_name = 'MineRLUnityAcademy'
         self._log_path = 'log_path'
         self._brains: Dict[str, BrainParameters] = {}
@@ -111,6 +126,9 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             ])
             # env = PruneVisualObservationsWrapper(env)
             # env = VisualObsAsFloatWrapper(env)
+
+            # note: should be the last wrapper
+            env = ResetOnDoneWrapper(env)
 
             MineRLToMLAgentWrapper.set_wrappers_for_pretraining(file_name, env)
 
@@ -148,10 +166,6 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
     @property
     def brains(self):
         return self._brains
-
-    @property
-    def global_done(self):
-        return self._global_done
 
     @property
     def academy_name(self):
@@ -214,11 +228,35 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         )
 
     def reset(
-        self, config=None, train_mode=True, custom_reset_parameters=None
+        self,
+        config: Dict = None,
+        train_mode: bool = True,
+        custom_reset_parameters: Any = None,
     ) -> AllBrainInfo:
 
+        if config is None:
+            config = self._resetParameters
+        elif config:
+            logger.info(
+                "Academy reset with parameters: {0}".format(
+                    ", ".join([str(x) + " -> " + str(config[x]) for x in config])
+                )
+            )
+        for k in config:
+            if (k in self._resetParameters) and (isinstance(config[k], (int, float))):
+                self._resetParameters[k] = config[k]
+            elif not isinstance(config[k], (int, float)):
+                raise UnityEnvironmentException(
+                    "The value for parameter '{0}'' must be an Integer or a Float.".format(
+                        k
+                    )
+                )
+            else:
+                raise UnityEnvironmentException(
+                    "The parameter '{0}' is not a valid parameter.".format(k)
+                )
+
         if self._loaded:
-            self._global_done = False
             all_brain_info = dict()
             for brain_name in self._external_brain_names:
                 for i, env in enumerate(self._envs[brain_name]): #enumerate(xs)
@@ -227,6 +265,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
                         all_brain_info[brain_name] = brain_info
                     else:
                         all_brain_info[brain_name] = self._combine_brain_infos([all_brain_info[brain_name], brain_info])
+            self._is_first_message = False
             return all_brain_info
         else:
             raise UnityEnvironmentException("No Unity environment is loaded.")
@@ -263,11 +302,11 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
     @timed
     def step(
         self,
-        vector_action=None,
-        memory=None,
-        text_action=None,
-        value=None,
-        custom_action=None,
+        vector_action: Dict[str, np.ndarray] = None,
+        memory: Optional[Dict[str, np.ndarray]] = None,
+        text_action: Optional[Dict[str, List[str]]] = None,
+        value: Optional[Dict[str, np.ndarray]] = None,
+        custom_action: Dict[str, Any] = None,
     ) -> AllBrainInfo:
         """
         Provides the environment with an action, moves the environment dynamics forward accordingly,
@@ -279,6 +318,8 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         :param custom_action: Optional instance of a CustomAction protobuf message.
         :return: AllBrainInfo  : A Data structure corresponding to the new state of the environment.
         """
+        if self._is_first_message:
+            return self.reset()
         vector_action = {} if vector_action is None else vector_action
         memory = {} if memory is None else memory
         text_action = {} if text_action is None else text_action
@@ -286,18 +327,82 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         custom_action = {} if custom_action is None else custom_action
 
         # Check that environment is loaded, and episode is currently running.
+        # Check that environment is loaded, and episode is currently running.
         if not self._loaded:
             raise UnityEnvironmentException("No Unity environment is loaded.")
-        elif self._global_done:
-            raise UnityActionException(
-                "The episode is completed. Reset the environment with 'reset()'"
-            )
-        elif self.global_done is None:
-            raise UnityActionException(
-                "You cannot conduct step without first calling reset. "
-                "Reset the environment with 'reset()'"
-            )
         else:
+            if isinstance(vector_action, self.SINGLE_BRAIN_ACTION_TYPES):
+                if self._num_external_brains == 1:
+                    vector_action = {self._external_brain_names[0]: vector_action}
+                elif self._num_external_brains > 1:
+                    raise UnityActionException(
+                        "You have {0} brains, you need to feed a dictionary of brain names a keys, "
+                        "and vector_actions as values".format(self._num_brains)
+                    )
+                else:
+                    raise UnityActionException(
+                        "There are no external brains in the environment, "
+                        "step cannot take a vector_action input"
+                    )
+
+            if isinstance(memory, self.SINGLE_BRAIN_ACTION_TYPES):
+                if self._num_external_brains == 1:
+                    memory = {self._external_brain_names[0]: memory}
+                elif self._num_external_brains > 1:
+                    raise UnityActionException(
+                        "You have {0} brains, you need to feed a dictionary of brain names as keys "
+                        "and memories as values".format(self._num_brains)
+                    )
+                else:
+                    raise UnityActionException(
+                        "There are no external brains in the environment, "
+                        "step cannot take a memory input"
+                    )
+
+            if isinstance(text_action, self.SINGLE_BRAIN_TEXT_TYPES):
+                if self._num_external_brains == 1:
+                    text_action = {self._external_brain_names[0]: text_action}
+                elif self._num_external_brains > 1:
+                    raise UnityActionException(
+                        "You have {0} brains, you need to feed a dictionary of brain names as keys "
+                        "and text_actions as values".format(self._num_brains)
+                    )
+                else:
+                    raise UnityActionException(
+                        "There are no external brains in the environment, "
+                        "step cannot take a value input"
+                    )
+
+            if isinstance(value, self.SINGLE_BRAIN_ACTION_TYPES):
+                if self._num_external_brains == 1:
+                    value = {self._external_brain_names[0]: value}
+                elif self._num_external_brains > 1:
+                    raise UnityActionException(
+                        "You have {0} brains, you need to feed a dictionary of brain names as keys "
+                        "and state/action value estimates as values".format(
+                            self._num_brains
+                        )
+                    )
+                else:
+                    raise UnityActionException(
+                        "There are no external brains in the environment, "
+                        "step cannot take a value input"
+                    )
+
+            if isinstance(custom_action, CustomAction):
+                if self._num_external_brains == 1:
+                    custom_action = {self._external_brain_names[0]: custom_action}
+                elif self._num_external_brains > 1:
+                    raise UnityActionException(
+                        "You have {0} brains, you need to feed a dictionary of brain names as keys "
+                        "and CustomAction instances as values".format(self._num_brains)
+                    )
+                else:
+                    raise UnityActionException(
+                        "There are no external brains in the environment, "
+                        "step cannot take a custom_action input"
+                    )
+
             # vector_action = {self._external_brain_names[0]: vector_action}
             all_brain_info = dict()
             for brain_name in self._external_brain_names:
@@ -309,13 +414,11 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
                         all_brain_info[brain_name] = brain_info
                     else:
                         all_brain_info[brain_name] = self._combine_brain_infos([all_brain_info[brain_name], brain_info])
-                self._global_done = True if True in brain_info.local_done else self._global_done
 
             # for _b in self._external_brain_names:
             # for i, _b in enumerate(self._external_brain_names): #enumerate(xs)
             #     brain_info = self._envs[i].step(vector_action)
             #     brain_info.memories = memory[_b]
-            #     self._global_done = True if True in brain_info.local_done else self._global_done
             #     all_brain_info[_b]=brain_info
             return all_brain_info
 
