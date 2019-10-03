@@ -93,9 +93,9 @@ def main():
     # How to sample minerl data is document here:
     # http://minerl.io/docs/tutorials/data_sampling.html
     # data = minerl.data.make(MINERL_GYM_ENV, data_dir=MINERL_DATA_ROOT)
-    # MINERL_GYM_ENV = 'MineRLTreechop-v0'
+    MINERL_GYM_ENV = 'MineRLTreechop-v0'
     # MINERL_GYM_ENV = 'MineRLNavigate-v0'
-    MINERL_GYM_ENV = 'MineRLNavigateDense-v0'
+    # MINERL_GYM_ENV = 'MineRLNavigateDense-v0'
     # MINERL_GYM_ENV = 'MineRLNavigateExtreme-v0'
     # MINERL_GYM_ENV = 'MineRLNavigateExtremeDense-v0'
     # MINERL_GYM_ENV = 'MineRLObtainIronPickaxe-v0'
@@ -114,7 +114,8 @@ def main():
     argv.append('config/mlagents_gail_config.yaml')
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
-    argv.append('--run-id=MineRLNavigateDense-032')
+    # argv.append('--run-id=MineRLNavigateDense-044')
+    argv.append('--run-id=MineRLTreechop-003')
     # argv.append('--num-envs=2')
     # argv.append('--num-envs=5')
 

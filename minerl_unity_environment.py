@@ -103,7 +103,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             env = PruneActionsWrapper(env, [
             #    # 'attack_jump'
             #    # ,'camera_left_right'
-            #    'camera_up_down'
+               'camera_up_down'
             #    # ,'forward_back'
             #    ,'left_right'
             #    # ,'place'

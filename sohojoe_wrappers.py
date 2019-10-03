@@ -396,14 +396,6 @@ class KeyboardControlWrapper(gym.Wrapper):
                     visual_obs[1:5, start:end, 0:1] = max_bright
                 i += 1
 
-            key = list(vector_obs.values())[0]
-            time_num = list(vector_obs.values())[1]
-            # key_num = np.argmax(key, axis=0)
-        #     for i in range(key_num):
-        #         start = int(i * 16.8) + 4
-        #         end = start + 10
-        #         visual_obs[1:5, start:end, 0:2] = max_bright
-        #     visual_obs[6:10, 0:int(time_num * w), 1] = max_bright    
         self._8bit = visual_obs
         # if type(visual_obs[0][0][0]) is np.float32 or type(visual_obs[0][0][0]) is np.float64:
             # _8bit = (255.0 * visual_obs).astype(np.uint8)
