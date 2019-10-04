@@ -115,7 +115,8 @@ def main():
     from trainer_mlagents import main as unity_main
     import sys
     argv = sys.argv[1:]
-    argv.append('config/mlagents_gail_config.yaml')
+    # argv.append('config/mlagents_gail_config.yaml') # PPO
+    argv.append('config/mlagents_sac_gail_config.yaml') # SAC
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
     argv.append('--run-id=MineRLNavigateDense-050')
