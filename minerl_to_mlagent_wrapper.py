@@ -226,7 +226,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
             wrapped_env = wrapped_env.env
             if not hasattr(wrapped_env, 'env'):
                 break 
-        brain_params = envs[-1].brain_parameters
+        brain_params = envs[0].brain_parameters
         return brain_params
 
     @staticmethod
