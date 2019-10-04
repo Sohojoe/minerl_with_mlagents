@@ -8,5 +8,7 @@ dependencies:
   # - pytorch
   # - torchvision
   # - cudatoolkit=10.0
-  - tensorflow=1.14
-  # - tensorflow-gpu=1.14
+  # - tensorflow=1.1
+  - mkl
+  - numpy
+  - tensorflow-gpu=1.14
