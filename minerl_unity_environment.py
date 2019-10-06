@@ -124,7 +124,7 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
                 # ,'place'
                 ,'sneak_sprint'
             ])
-            env = PruneVisualObservationsWrapper(env)
+            env = PruneVisualObservationsWrapper(env, hack_ignor=True)
             # env = VisualObsAsFloatWrapper(env)
 
             # note: should be the last wrapper
