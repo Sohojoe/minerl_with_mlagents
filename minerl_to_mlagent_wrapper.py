@@ -308,6 +308,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
 
     def reset(self):
         # self.env._max_episode_steps = 1000 # HACK
+        self.env._max_episode_steps = 2000 # HACK
         ob = self.env.reset()
         brain_info = self._create_brain_info(ob)
         return brain_info
