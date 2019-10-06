@@ -27,8 +27,10 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
             self._mlagent_action_space['forward_back']=['noop','forward','back']
         if 'left' and 'right' in self._minerl_action_space:
             self._mlagent_action_space['left_right']=['noop','left','right']
-        if 'attack' and 'jump' in self._minerl_action_space:
-            self._mlagent_action_space['attack_jump']=['noop','attack','jump']
+        # if 'attack' and 'jump' in self._minerl_action_space:
+        #     self._mlagent_action_space['attack_jump']=['noop','attack','jump']
+        if 'jump' in self._minerl_action_space:
+            self._mlagent_action_space['jump']=['noop','jump']
         self._mlagent_action_space['camera_left_right']=['noop','camera_left','camera_right']
         self._mlagent_action_space['camera_up_down']=['noop','camera_up','camera_down']
         if 'sneak' and 'sprint' in self._minerl_action_space:
@@ -104,7 +106,10 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
                     act_v[i] = -1
             except TypeError:
                 act_v = -1
-            if act_k in ['forward', 'back', 'left', 'right', 'sneak', 'sprint', 'jump', 'attack']:
+            # if act_k in ['forward', 'back', 'left', 'right', 'sneak', 'sprint', 'jump', 'attack']:
+            if act_k in ['attack']:
+                act_v = type(act_v) (1)
+            if act_k in ['forward', 'back', 'left', 'right', 'sneak', 'sprint', 'jump']:
                 for i, v in enumerate(self._mlagent_action_space.items()): 
                     if act_k in v[0] and act_k in v[1]:
                         act_v = type(act_v) (action_in[i] == v[1].index(act_k))
