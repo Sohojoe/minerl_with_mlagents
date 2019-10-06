@@ -1,16 +1,17 @@
-minerl==0.2.3
+minerl==0.2.4
 crowdai_api
 coloredlogs
-matplotlib
+matplotlib==3.0.3
 opencv-python
 pyro4
 packaging
 
+# cupy-cuda100
 # chainerrl>=0.7.0
 # pydot
 # matplotlib
 # mlagents_envs==0.9.3
-tensorflow>=1.7,<1.8
+# tensorflow>=1.7,<1.8
 docopt
 pyyaml
 h5py>=2.9.0

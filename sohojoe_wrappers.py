@@ -4,9 +4,13 @@ import numpy as np
 from mlagents.envs import AllBrainInfo, BrainInfo, BrainParameters
 
 class PruneVisualObservationsWrapper(gym.Wrapper):
-    def __init__(self, env):
+    def __init__(self, env, hack_ignor=False):
         super(PruneVisualObservationsWrapper, self).__init__(env)   
         self._parent_brain_parameters = env.brain_parameters
+        self._brain_parameters = env.brain_parameters
+        self._hack_ignor = hack_ignor
+        if self._hack_ignor:
+            return
 
         self._brain_parameters = BrainParameters(
             brain_name = self._parent_brain_parameters.brain_name,
@@ -24,6 +28,8 @@ class PruneVisualObservationsWrapper(gym.Wrapper):
     def _process_brain_info(self, brain_info:BrainInfo, raw_action_in=None):
         if raw_action_in is None:
             raw_action_in = brain_info.previous_vector_actions
+        if self._hack_ignor:
+            return            
         brain_info.visual_observations = []
         # brain_info.previous_vector_actions = raw_action_in
         # total_num_actions = sum(self.brain_parameters.vector_action_space_size)
@@ -44,7 +50,7 @@ class PruneVisualObservationsWrapper(gym.Wrapper):
 
     def reset(self, **kwargs):
         brain_info =  self.env.reset(**kwargs)
-        brain_info.visual_observations = []
+        brain_info = self._process_brain_info(brain_info)
         return brain_info
 
     @property
@@ -604,3 +610,25 @@ class RefineObservationsWrapper(gym.Wrapper):
     @property
     def brain_parameters(self) ->BrainParameters:
         return self._brain_parameters
+
+class ResetOnDoneWrapper(gym.Wrapper):
+    def __init__(self, env):
+        super(ResetOnDoneWrapper, self).__init__(env)   
+        self._should_reset = False
+
+    def step(self, raw_action_in)->BrainInfo:
+        if self._should_reset:
+            self.reset()
+            # make action = no op
+            for action in raw_action_in:
+                for i, k in enumerate(action):
+                    action[i] = 0
+
+        brain_info = self.env.step(raw_action_in)
+        self._should_reset |= brain_info.local_done[0]
+        return brain_info
+
+    def reset(self, **kwargs):
+        brain_info =  self.env.reset(**kwargs)
+        self._should_reset = False        
+        return brain_info

@@ -103,6 +103,14 @@ def run_training(
     
     # HACK for debug use SimpleEnvManager
     if num_envs > 1:
+        # create a mock env for parsin examples (kill internal)
+        mock_env = env_factory(9999)
+        # from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
+        # MineRLToMLAgentWrapper.set_wrappers_for_pretraining(mock_env.brain_names[0], mock_env)
+        # close inner minerl enviroment
+        for k, v in mock_env._envs.items():
+            for e in v:
+                e.unwrapped.close()
         env = SubprocessEnvManager(env_factory, num_envs)
     else:
         env = env_factory(0)
