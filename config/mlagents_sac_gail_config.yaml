@@ -47,7 +47,7 @@ MineRLTreechop-v0:
             strength: 0.1
             gamma: 0.99
             encoding_size: 128
-            use_actions: true
+            # use_actions: true
             demo_path: MineRLTreechop-v0
 
 
@@ -78,5 +78,5 @@ MineRLNavigateDense-v0:
             strength: 0.1
             gamma: 0.99
             encoding_size: 128
-            use_actions: true
+            # use_actions: true
             demo_path: MineRLNavigateDense-v0

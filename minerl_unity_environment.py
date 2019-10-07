@@ -120,9 +120,9 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
                 # ,'camera_left_right'
                 # 'camera_up_down'
                 # ,'forward_back'
-                'left_right'
+                # 'left_right'
                 # ,'place'
-                ,'sneak_sprint'
+                # ,'sneak_sprint'
             ])
             env = PruneVisualObservationsWrapper(env, hack_ignor=True)
             # env = VisualObsAsFloatWrapper(env)
