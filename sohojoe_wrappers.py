@@ -26,10 +26,10 @@ class PruneVisualObservationsWrapper(gym.Wrapper):
         return raw_action_in
 
     def _process_brain_info(self, brain_info:BrainInfo, raw_action_in=None):
-        if raw_action_in is None:
-            raw_action_in = brain_info.previous_vector_actions
+        # if raw_action_in is None and brain_info is not None:
+        #     raw_action_in = brain_info.previous_vector_actions
         if self._hack_ignor:
-            return            
+            return brain_info         
         brain_info.visual_observations = []
         # brain_info.previous_vector_actions = raw_action_in
         # total_num_actions = sum(self.brain_parameters.vector_action_space_size)

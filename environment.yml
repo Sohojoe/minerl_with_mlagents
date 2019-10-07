@@ -10,5 +10,5 @@ dependencies:
   # - cudatoolkit=10.0
   - mkl
   - numpy
-  # - tensorflow-gpu=1.14
-  - tensorflow=1.14
+  - tensorflow-gpu=1.14
+  # - tensorflow=1.14
