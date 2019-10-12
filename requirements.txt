@@ -1,4 +1,4 @@
-minerl==0.2.4
+minerl==0.2.5
 crowdai_api
 coloredlogs
 matplotlib==3.0.3
