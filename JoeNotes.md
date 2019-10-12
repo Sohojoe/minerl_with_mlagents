@@ -1,13 +1,12 @@
-
 # Setup environment
 
 Note - edit between tensorflow and tensorflow-gpu
 
-`conda env create -f environment.yml`
-
 ``` bash
+conda env create -f environment.yml
 conda activate minerl_challenge
 pip install -r requirements.txt
+python ./utility/verify_or_download_data.py
 ```
 
 ## Install custom ml agents
