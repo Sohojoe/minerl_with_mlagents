@@ -44,10 +44,10 @@ MineRLTreechop-v0:
             strength: 1.0
             gamma: 0.99
         gail:
-            strength: 0.1
+            strength: 1.0
             gamma: 0.99
             encoding_size: 128
-            # use_actions: true
+            use_actions: true
             demo_path: MineRLTreechop-v0
 
 

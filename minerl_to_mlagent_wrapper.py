@@ -19,6 +19,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         super(MineRLToMLAgentWrapper, self).__init__(env)   
         env_id = env.spec.id
         self._is_processing_obs = False
+        self._hack_always_chop = False
 
         self._minerl_action_space = gym.envs.registry.env_specs[env_id]._kwargs['action_space'].spaces
         self._minerl_observation_space = gym.envs.registry.env_specs[env_id]._kwargs['observation_space'].spaces
@@ -27,10 +28,12 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
             self._mlagent_action_space['forward_back']=['noop','forward','back']
         if 'left' and 'right' in self._minerl_action_space:
             self._mlagent_action_space['left_right']=['noop','left','right']
-        # if 'attack' and 'jump' in self._minerl_action_space:
-        #     self._mlagent_action_space['attack_jump']=['noop','attack','jump']
-        if 'jump' in self._minerl_action_space:
-            self._mlagent_action_space['jump']=['noop','jump']
+        if self._hack_always_chop:
+            if 'jump' in self._minerl_action_space:
+                self._mlagent_action_space['jump']=['noop','jump']
+        else:
+            if 'attack' and 'jump' in self._minerl_action_space:
+                self._mlagent_action_space['attack_jump']=['noop','attack','jump']
         self._mlagent_action_space['camera_left_right']=['noop','camera_left','camera_right']
         self._mlagent_action_space['camera_up_down']=['noop','camera_up','camera_down']
         if 'sneak' and 'sprint' in self._minerl_action_space:
@@ -106,10 +109,12 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
                     act_v[i] = -1
             except TypeError:
                 act_v = -1
-            # if act_k in ['forward', 'back', 'left', 'right', 'sneak', 'sprint', 'jump', 'attack']:
-            if act_k in ['attack']:
-                act_v = type(act_v) (1)
-            if act_k in ['forward', 'back', 'left', 'right', 'sneak', 'sprint', 'jump']:
+            actions = ['forward', 'back', 'left', 'right', 'sneak', 'sprint', 'jump', 'attack']
+            if self._hack_always_chop:
+                actions = ['forward', 'back', 'left', 'right', 'sneak', 'sprint', 'jump']
+                if act_k in ['attack']:
+                    act_v = type(act_v) (1)
+            if act_k in actions:
                 for i, v in enumerate(self._mlagent_action_space.items()): 
                     if act_k in v[0] and act_k in v[1]:
                         act_v = type(act_v) (action_in[i] == v[1].index(act_k))
