@@ -120,9 +120,9 @@ def main():
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
     # argv.append('--run-id=MineRLNavigateDense-061')
-    argv.append('--run-id=MineRLTreechop-017')
+    argv.append('--run-id=MineRLTreechop-020')
     # argv.append('--num-envs=2')
-    # argv.append('--num-envs=5')
+    argv.append('--num-envs=5')
 
     # env = MineRLUnityEnvironment(MINERL_GYM_ENV)
     from minerl.env.malmo import InstanceManager

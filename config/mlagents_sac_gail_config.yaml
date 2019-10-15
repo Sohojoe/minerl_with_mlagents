@@ -33,10 +33,11 @@ MineRLTreechop-v0:
     hidden_units: 128
     num_layers: 2
     init_entcoef: 0.03
-    max_steps: 10.0e5
+    # max_steps: 10.0e5
+    max_steps: 80.0e5
     sequence_length: 64
     tau: 0.01
-    # learning_rate: 1e-4
+    learning_rate: 1e-4
     use_recurrent: true
     # vis_encode_type: resnet
     reward_signals:

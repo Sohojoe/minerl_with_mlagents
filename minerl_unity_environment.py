@@ -112,8 +112,8 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             env = MineRLToMLAgentWrapper(env, seeds[i])
             env = RefineObservationsWrapper(env)
             env = NormalizeObservationsWrapper(env)
-            if self.worker_id is 0:
-                env = KeyboardControlWrapper(env)
+            # if self.worker_id is 0:
+            #     env = KeyboardControlWrapper(env)
             # env = HardwireActionsWrapper(env)
             env = PruneActionsWrapper(env, [
                 # 'attack_jump'
