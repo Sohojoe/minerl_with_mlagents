@@ -33,7 +33,7 @@ MineRLTreechop-v0:
     hidden_units: 128
     num_layers: 2
     init_entcoef: 0.03
-    max_steps: 5.0e5
+    max_steps: 10.0e5
     sequence_length: 64
     tau: 0.01
     # learning_rate: 1e-4
@@ -48,6 +48,7 @@ MineRLTreechop-v0:
             gamma: 0.99
             encoding_size: 128
             use_actions: true
+            use_vail: true
             demo_path: MineRLTreechop-v0
 
 
