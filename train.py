@@ -14,7 +14,20 @@ import coloredlogs
 # coloredlogs.install(logging.DEBUG)
 
 # All the evaluations will be evaluated on MineRLObtainDiamond-v0 environment
-MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainDiamond-v0')
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainDiamond-v0')
+MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLTreechop-v0')
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLNavigate-v0')
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLNavigateDense-v0')
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLNavigateExtreme-v0')
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLNavigateExtremeDense-v0')
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainIronPickaxe-v0')
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainIronPickaxeDense-v0')
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainDiamond-v0')
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainDiamondDense-v0')
+#                         # for debug use
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLNavigateDenseFixed-v0')
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainTest-v0')
+
 # You need to ensure that your submission is trained in under MINERL_TRAINING_MAX_STEPS steps
 MINERL_TRAINING_MAX_STEPS = int(os.getenv('MINERL_TRAINING_MAX_STEPS', 8000000))
 # You need to ensure that your submission is trained by launching less than MINERL_TRAINING_MAX_INSTANCES instances
@@ -97,18 +110,6 @@ def main():
     # How to sample minerl data is document here:
     # http://minerl.io/docs/tutorials/data_sampling.html
     # data = minerl.data.make(MINERL_GYM_ENV, data_dir=MINERL_DATA_ROOT)
-    MINERL_GYM_ENV = 'MineRLTreechop-v0'
-    # MINERL_GYM_ENV = 'MineRLNavigate-v0'
-    # MINERL_GYM_ENV = 'MineRLNavigateDense-v0'
-    # MINERL_GYM_ENV = 'MineRLNavigateExtreme-v0'
-    # MINERL_GYM_ENV = 'MineRLNavigateExtremeDense-v0'
-    # MINERL_GYM_ENV = 'MineRLObtainIronPickaxe-v0'
-    # MINERL_GYM_ENV = 'MineRLObtainIronPickaxeDense-v0'
-    # MINERL_GYM_ENV = 'MineRLObtainDiamond-v0'
-    # MINERL_GYM_ENV = 'MineRLObtainDiamondDense-v0'
-    #                         # for debug use
-    # MINERL_GYM_ENV = 'MineRLNavigateDenseFixed-v0'
-    # MINERL_GYM_ENV = 'MineRLObtainTest-v0'
 
     os.environ['MINERL_DATA_ROOT']=MINERL_DATA_ROOT
 
@@ -120,14 +121,16 @@ def main():
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
     # argv.append('--run-id=MineRLNavigateDense-061')
-    argv.append('--run-id=MineRLTreechop-020')
+    argv.append('--run-id=MineRLTreechop-021')
+    argv.append('--num-envs='+str(MINERL_TRAINING_MAX_INSTANCES))
     # argv.append('--num-envs=2')
-    argv.append('--num-envs=5')
+    # argv.append('--num-envs=5')
 
-    # env = MineRLUnityEnvironment(MINERL_GYM_ENV)
     from minerl.env.malmo import InstanceManager
-    InstanceManager.MAXINSTANCES = MINERL_TRAINING_MAX_INSTANCES
-    # InstanceManager.allocate_pool(5)
+    try:
+        InstanceManager.MAXINSTANCES = MINERL_TRAINING_MAX_INSTANCES
+    except AttributeError:
+        pass
 
     unity_main(argv, create_environment_factory)
     # gym.envs.registry.env_specs[MINERL_GYM_ENV]

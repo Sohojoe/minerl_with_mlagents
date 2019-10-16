@@ -104,10 +104,22 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
         
         for i in range(num_envs):
             print ('InstanceManager:', InstanceManager)
-            print ('.MAXINSTANCES', InstanceManager.MAXINSTANCES)
+            try:
+                print ('.MAXINSTANCES', InstanceManager.MAXINSTANCES)
+            except AttributeError:
+                print ('.MAXINSTANCES', 'None')
+                pass
             print ('.REMOTE', InstanceManager.is_remote())
-            print ('.ninstances', InstanceManager.ninstances)
-            print ('.DEFAULT_IP', InstanceManager.DEFAULT_IP)
+            try:
+                print ('.ninstances', InstanceManager.ninstances)
+            except AttributeError:
+                print ('.ninstances', 'None')
+                pass
+            try:
+                print ('.DEFAULT_IP', InstanceManager.DEFAULT_IP)
+            except AttributeError:
+                print ('.DEFAULT_IP', 'None')
+                pass
             env = gym.make(file_name)
             env = MineRLToMLAgentWrapper(env, seeds[i])
             env = RefineObservationsWrapper(env)

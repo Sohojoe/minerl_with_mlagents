@@ -131,3 +131,4 @@ dmypy.json
 baselines/general/chainerrl/baselines/results/
 summaries
 models
+performance

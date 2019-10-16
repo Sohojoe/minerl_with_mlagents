@@ -108,9 +108,12 @@ def run_training(
         # from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
         # MineRLToMLAgentWrapper.set_wrappers_for_pretraining(mock_env.brain_names[0], mock_env)
         # close inner minerl enviroment
-        for k, v in mock_env._envs.items():
-            for e in v:
-                e.unwrapped.close()
+        try:
+            for k, v in mock_env._envs.items():
+                for e in v:
+                        e.unwrapped.close()
+        except AttributeError:
+            mock_env.close()
         env = SubprocessEnvManager(env_factory, num_envs)
     else:
         env = env_factory(0)
