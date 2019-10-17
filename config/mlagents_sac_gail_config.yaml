@@ -26,12 +26,13 @@ default:
 
 MineRLTreechop-v0:
     summary_freq: 2000
-    time_horizon: 64
+    time_horizon: 1000
     batch_size: 64
     buffer_init_steps: 10000
     buffer_size: 500000
     hidden_units: 128
-    num_layers: 2
+    num_layers: 4
+    train_interval: 2
     init_entcoef: 0.03
     # max_steps: 10.0e5
     max_steps: 80.0e5
@@ -43,11 +44,11 @@ MineRLTreechop-v0:
     reward_signals:
         extrinsic:
             strength: 1.0
-            gamma: 0.99
+            gamma: 0.995
         gail:
-            strength: 1.0
-            gamma: 0.99
-            encoding_size: 128
+            strength: 0.03
+            gamma: 0.995
+            # encoding_size: 128
             use_actions: true
             use_vail: true
             demo_path: MineRLTreechop-v0
