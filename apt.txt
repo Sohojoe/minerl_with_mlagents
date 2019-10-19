@@ -3,7 +3,7 @@ git
 vim
 ssh
 gcc
-python-dev
+python3.6-dev
 libsm6
 libxext6
 libxrender-dev
@@ -15,3 +15,4 @@ freeglut3-dev
 libx11-6
 python-opengl
 x11-xserver-utils
+clang
