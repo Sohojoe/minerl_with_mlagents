@@ -13,6 +13,8 @@ dependencies:
   # - tensorflow-gpu=1.14
   - tensorflow=1.14
   - pip:
+    - git+git://github.com/Sohojoe/ml-agents-envs-python@master
+    - git+git://github.com/Sohojoe/ml-agents-python@master
     - crowdai_api
     - minerl
     - coloredlogs
