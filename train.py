@@ -121,7 +121,7 @@ def main():
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
     # argv.append('--run-id=MineRLNavigateDense-061')
-    argv.append('--run-id=MineRLTreechop-023')
+    argv.append('--run-id=MineRLTreechop-027')
     argv.append('--num-envs='+str(MINERL_TRAINING_MAX_INSTANCES))
     # argv.append('--num-envs=2')
     # argv.append('--num-envs=5')
