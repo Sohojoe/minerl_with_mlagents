@@ -249,6 +249,9 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
 
     @staticmethod
     def process_brain_info_through_wrapped_envs(brain_name: str, brain_info: BrainInfo):
+        # HACK support using different training data name
+        if brain_name not in MineRLToMLAgentWrapper.static_brain_params.keys():
+            brain_name = list(MineRLToMLAgentWrapper.static_brain_params.keys())[0]
         env = MineRLToMLAgentWrapper.static_wrapped_env[brain_name]
         envs = []
         wrapped_env = env
