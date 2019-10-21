@@ -32,6 +32,19 @@ export MINERL_INSTANCE_MANAGER_REMOTE="1"
 export EVALUATION_STAGE='training'
 export EVALUATION_RUNNING_ON='local'
 export EXITED_SIGNAL_PATH='shared/training_exited'
+
+# echo "** HACK ** install ml-agents"
+# pip install git+git://github.com/Sohojoe/ml-agents-envs-python@master
+# pip install git+git://github.com/Sohojoe/ml-agents-python@master
+
+echo "** HACK ** joe env vars"
+export CUDA_VISIBLE_DEVICES=-1
+export MINERL_GYM_ENV='MineRLTreechop-v0'
+export MINERL_DATA_ROOT='./data'
+export MINERL_TRAINING_MAX_INSTANCES=5
+export MINERL_TRAINING_MAX_STEPS=8000000
+export MINERL_TRAINING_TIMEOUT_MINUTES=5760
+
 rm -f $EXITED_SIGNAL_PATH
 export ENABLE_AICROWD_JSON_OUTPUT='False'
 eval "python3 run.py $EXTRAOUTPUT && touch $EXITED_SIGNAL_PATH || touch $EXITED_SIGNAL_PATH &"
