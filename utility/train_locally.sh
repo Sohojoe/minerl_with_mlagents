@@ -39,7 +39,8 @@ export EXITED_SIGNAL_PATH='shared/training_exited'
 
 echo "** HACK ** joe env vars"
 export CUDA_VISIBLE_DEVICES=-1
-export MINERL_GYM_ENV='MineRLTreechop-v0'
+# export MINERL_GYM_ENV='MineRLTreechop-v0'
+export MINERL_GYM_ENV='MineRLObtainDiamond-v0'
 export MINERL_DATA_ROOT='./data'
 export MINERL_TRAINING_MAX_INSTANCES=5
 export MINERL_TRAINING_MAX_STEPS=8000000

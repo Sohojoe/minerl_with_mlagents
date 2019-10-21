@@ -14,8 +14,8 @@ import coloredlogs
 # coloredlogs.install(logging.DEBUG)
 
 # All the evaluations will be evaluated on MineRLObtainDiamond-v0 environment
-# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainDiamond-v0')
-MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLTreechop-v0')
+MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainDiamond-v0')
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLTreechop-v0')
 # MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLNavigate-v0')
 # MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLNavigateDense-v0')
 # MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLNavigateExtreme-v0')
@@ -121,7 +121,7 @@ def main():
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
     # argv.append('--run-id=MineRLNavigateDense-061')
-    argv.append('--run-id=MineRLTreechop-034')
+    argv.append('--run-id=MineRLObtainDiamond-000')
     argv.append('--num-envs='+str(MINERL_TRAINING_MAX_INSTANCES))
     # argv.append('--num-envs=2')
     # argv.append('--num-envs=5')
