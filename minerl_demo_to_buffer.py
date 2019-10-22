@@ -53,6 +53,10 @@ def demo_to_buffer(
         demo.height, demo.width = data.observation_space.spaces['pov'].shape[:2]
         # all_demo[stream_name]=demo
 
+        if not demo.meta['success']:
+            logger.info("SKIP as success=False")
+            continue
+
         running_reward=0
         for i, frame in enumerate(demo.data_frames):
             ob=frame[0]
