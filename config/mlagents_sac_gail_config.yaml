@@ -42,7 +42,7 @@ MineRLObtainDiamond-v0:
     learning_rate: 3.0e-4    
     # learning_rate: 1e-4
     # learning_rate: 3e-5
-    use_recurrent: true
+    # use_recurrent: true
     # vis_encode_type: resnet
     reward_signals:
         extrinsic:
@@ -50,11 +50,12 @@ MineRLObtainDiamond-v0:
             gamma: 0.995
         gail:
             strength: 0.03
-            gamma: 0.99
+            gamma: 0.995
             # encoding_size: 128
             use_actions: true
             use_vail: true
-            demo_path: MineRLObtainDiamondDense-v0
+            demo_path: MineRLObtainDiamond-v0
+            # demo_path: MineRLObtainDiamondDense-v0
 
 MineRLTreechop-v0:
     summary_freq: 2000

@@ -2,6 +2,9 @@ import gym
 import time
 import numpy as np
 from mlagents.envs import AllBrainInfo, BrainInfo, BrainParameters
+from collections import deque
+import cv2
+cv2.ocl.setUseOpenCL(False)
 
 class PruneVisualObservationsWrapper(gym.Wrapper):
     def __init__(self, env, hack_ignor=False):
@@ -632,3 +635,118 @@ class ResetOnDoneWrapper(gym.Wrapper):
         brain_info =  self.env.reset(**kwargs)
         self._should_reset = False        
         return brain_info
+
+class FrameStackMono(gym.Wrapper):
+    def __init__(self, env, n_vis_stack, n_vector_stack):
+        """Stack n_vis_stack and n_vector_stack frames.
+        """
+        gym.Wrapper.__init__(self, env)
+        self.n_vis_stack = n_vis_stack
+        self.n_vector_stack = n_vector_stack
+        self.vector_frames = deque([], maxlen=self.n_vector_stack)
+        self.frames = deque([], maxlen=3+(self.n_vis_stack-1))
+        self.color_frames = deque([], maxlen=3)
+        self.mono_frames = deque([], maxlen=self.n_vis_stack)
+        old_pov = env.observation_space.spaces['pov']
+        from minerl.env import spaces as minerl_spaces
+        pov_shape = (old_pov.shape[0], old_pov.shape[1], 3+(self.n_vis_stack-1))
+        pov = minerl_spaces.Box(low=0, high=255, shape=pov_shape, dtype=np.uint8)
+        env.observation_space.spaces['pov'] = pov
+
+        self._parent_brain_parameters = env.brain_parameters
+        self._brain_parameters = env.brain_parameters
+        camera_resolutions = [self._parent_brain_parameters.camera_resolutions[0]]
+        mono_camera = {
+            "width": camera_resolutions[0]['width'], 
+            "height": camera_resolutions[0]['height'], 
+            "blackAndWhite": True
+            }
+        # camera_resolutions = [mono_camera,mono_camera,mono_camera]
+        for _ in range(self.n_vis_stack-1):
+            camera_resolutions.append(mono_camera)
+
+        self._brain_parameters = BrainParameters(
+            brain_name = self._parent_brain_parameters.brain_name,
+            vector_observation_space_size = self._parent_brain_parameters.vector_observation_space_size, 
+            num_stacked_vector_observations = self.n_vector_stack,
+            camera_resolutions = camera_resolutions,
+            vector_action_space_size = self._parent_brain_parameters.vector_action_space_size,
+            vector_action_descriptions = self._parent_brain_parameters.vector_action_descriptions,
+            vector_action_space_type = 0)   
+
+    def _process_action(self, raw_action_in):
+        return raw_action_in
+
+    def _process_brain_info(self, brain_info:BrainInfo, raw_action_in=None):
+        pov = brain_info.visual_observations[0][0]
+        while len(self.mono_frames) < self.mono_frames.maxlen:
+            self._add_ob(pov)
+        vector_obs = brain_info.vector_observations[0]
+        while len(self.vector_frames) < self.vector_frames.maxlen:
+            self._add_vector_ob(vector_obs)
+        pov = self._get_ob()
+        vector_obs = self._get_vector_ob()
+        brain_info.visual_observations = pov
+        brain_info.vector_observations = vector_obs
+        return brain_info
+
+    def process_demonstrations(self, brain_info):
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info
+
+    @property
+    def brain_parameters(self) ->BrainParameters:
+        return self._brain_parameters
+
+    def reset(self):
+        brain_info = self.env.reset()
+        pov = brain_info.visual_observations[0][0]
+        vector_obs = brain_info.vector_observations[0]
+        for _ in range(self.n_vis_stack):
+            self._add_ob(pov)
+        for _ in range(self.n_vector_stack):
+            self._add_vector_ob(vector_obs)
+        pov = self._get_ob()
+        vector_obs = self._get_vector_ob()
+        brain_info.visual_observations = pov
+        brain_info.vector_observations = vector_obs
+        return brain_info
+
+    def step(self, action):
+        brain_info = self.env.step(action)
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info
+
+    def _add_ob(self, ob):
+        ob_t = ob.T
+        self.color_frames.append(ob_t[0])
+        self.color_frames.append(ob_t[1])
+        self.color_frames.append(ob_t[2])
+        mono = cv2.cvtColor(ob.astype(np.float32), cv2.COLOR_RGB2GRAY)
+        mono = mono.astype(ob.dtype)
+        self.mono_frames.append(mono)
+
+    def _get_ob(self):
+        color = [self.color_frames[0]]
+        color.append(self.color_frames[1])
+        color.append(self.color_frames[2])
+        color = np.array(color).T
+        color = color.reshape(1, color.shape[0], color.shape[1], color.shape[2])
+        cameras = [color]
+        for i in range(self.n_vis_stack-1):
+            mono = self.mono_frames[i+1]
+            mono = mono.reshape(1, mono.shape[0], mono.shape[1], 1)
+            cameras.append(mono)
+        return cameras
+
+    def _add_vector_ob(self, ob):
+        self.vector_frames.append(ob)
+
+    def _get_vector_ob(self):
+        vector_obs = []
+        for i in range(self.n_vector_stack):
+            frame = self.vector_frames[i]
+            vector_obs.append(frame)
+        vector_obs = np.array(vector_obs)
+        vector_obs = vector_obs.reshape(1, vector_obs.shape[0]*vector_obs.shape[1])
+        return vector_obs

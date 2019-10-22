@@ -37,7 +37,7 @@ from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
 from sohojoe_wrappers import (
     KeyboardControlWrapper, PruneActionsWrapper, PruneVisualObservationsWrapper,
     VisualObsAsFloatWrapper, NormalizeObservationsWrapper, HardwireActionsWrapper,
-    RefineObservationsWrapper, ResetOnDoneWrapper
+    RefineObservationsWrapper, ResetOnDoneWrapper, FrameStackMono
 )
 from sys import platform
 
@@ -138,6 +138,8 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             ])
             env = PruneVisualObservationsWrapper(env, hack_ignor=True)
             # env = VisualObsAsFloatWrapper(env)
+
+            env = FrameStackMono(env, 2, 10)
 
             # note: should be the last wrapper
             env = ResetOnDoneWrapper(env)
