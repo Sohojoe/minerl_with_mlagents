@@ -28,6 +28,9 @@ if [[ " $@ " =~ " --nvidia " ]]; then
     -v $(pwd)/data:/home/aicrowd/data \
     -v $(pwd)/performance:/home/aicrowd/performance \
     -v $(pwd)/.gradle:/home/aicrowd/.gradle \
+    -v $(pwd)/summaries:/home/aicrowd/summaries \
+    -v $(pwd)/models:/home/aicrowd/models \
+    -v $(pwd)/train:/home/aicrowd/train \
     -e CROWDAI_DEBUG_MODE=True \
     -it ${IMAGE_NAME}:${IMAGE_TAG} \
     /bin/bash -c "echo \"Staring docker training...\"; xvfb-run -a ./utility/train_locally.sh ${ARGS}"
@@ -38,6 +41,9 @@ else
     -v $(pwd)/data:/home/aicrowd/data \
     -v $(pwd)/performance:/home/aicrowd/performance \
     -v $(pwd)/.gradle:/home/aicrowd/.gradle \
+    -v $(pwd)/summaries:/home/aicrowd/summaries \
+    -v $(pwd)/models:/home/aicrowd/models \
+    -v $(pwd)/train:/home/aicrowd/train \
     -e CROWDAI_DEBUG_MODE=True \
     -it ${IMAGE_NAME}:${IMAGE_TAG} \
     /bin/bash -c "echo \"Staring docker training...\"; xvfb-run -a ./utility/train_locally.sh ${ARGS}"
