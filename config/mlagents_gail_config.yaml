@@ -80,7 +80,7 @@ MineRLTreechop-v0:
 
 MineRLObtainDiamondDense-v0:
 MineRLObtainDiamond-v0:
-    max_steps: 40.0e5
+    max_steps: 80.0e5
     batch_size: 64
     memory_size: 256
     buffer_size: 2048
@@ -91,7 +91,7 @@ MineRLObtainDiamond-v0:
     num_layers: 2
     # beta: 1.0e-2
     vis_encode_type: simple
-    use_recurrent: true
+    # use_recurrent: true
     # normalize: true
     # pretraining:
     #     demo_path: MineRLTreechop-v0
@@ -100,11 +100,11 @@ MineRLObtainDiamond-v0:
     reward_signals:
         extrinsic:
             strength: 1
-            gamma: 0.99
+            gamma: 0.995
         gail:
-            strength: 1.0
-            gamma: 0.99
-            encoding_size: 128
+            strength: 0.03
+            gamma: 0.995
+            # encoding_size: 128
             use_vail: true
             demo_path: MineRLObtainDiamond-v0
 

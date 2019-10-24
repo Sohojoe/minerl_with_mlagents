@@ -116,12 +116,13 @@ def main():
     from trainer_mlagents import main as unity_main
     import sys
     argv = sys.argv[1:]
-    # argv.append('config/mlagents_gail_config.yaml') # PPO
-    argv.append('config/mlagents_sac_gail_config.yaml') # SAC
+    argv.append('config/mlagents_gail_config.yaml') # PPO
+    # argv.append('config/mlagents_sac_gail_config.yaml') # SAC
     argv.append('--train')
     argv.append('--env='+MINERL_GYM_ENV)
     # argv.append('--run-id=MineRLNavigateDense-061')
-    argv.append('--run-id=MineRLObtainDiamond-001')
+    # argv.append('--run-id=MineRLObtainDiamond-002')
+    argv.append('--run-id=MineRLObtainDiamond-ppo-002')
     argv.append('--num-envs='+str(MINERL_TRAINING_MAX_INSTANCES))
     # argv.append('--num-envs=2')
     # argv.append('--num-envs=5')

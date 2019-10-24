@@ -56,6 +56,12 @@ def demo_to_buffer(
         if not demo.meta['success']:
             logger.info("SKIP as success=False")
             continue
+        if int(demo.meta['duration_steps']) > 10000:
+            logger.info("****HACK**** SKIP as > 10k steps")
+            continue
+        if int(demo.meta['total_reward']) < 1024:
+            logger.info("ERROR score must be > 1024 because of dimond = 1024 points")
+            continue
 
         running_reward=0
         for i, frame in enumerate(demo.data_frames):
