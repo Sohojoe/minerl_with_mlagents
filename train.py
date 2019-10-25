@@ -122,7 +122,7 @@ def main():
     argv.append('--env='+MINERL_GYM_ENV)
     # argv.append('--run-id=MineRLNavigateDense-061')
     # argv.append('--run-id=MineRLObtainDiamond-002')
-    argv.append('--run-id=MineRLObtainDiamond-ppo-002')
+    argv.append('--run-id=MineRLObtainDiamond-ppo-003')
     argv.append('--num-envs='+str(MINERL_TRAINING_MAX_INSTANCES))
     # argv.append('--num-envs=2')
     # argv.append('--num-envs=5')
