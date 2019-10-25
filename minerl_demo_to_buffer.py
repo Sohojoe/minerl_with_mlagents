@@ -29,6 +29,16 @@ def demo_to_buffer(
     :param sequence_length: Length of trajectories to fill buffer.
     :return:
     """
+
+    # early exit if inference mode
+    # export EVALUATION_STAGE='testing'
+    EVALUATION_STAGE = os.getenv('EVALUATION_STAGE', '')
+    if EVALUATION_STAGE == 'testing':
+        demo_buffer = Buffer()
+        brain_params = MineRLToMLAgentWrapper.get_brain_params(file_path)
+        return brain_params, demo_buffer
+
+
     # # The dataset is available in data/ directory from repository root.
     # MINERL_DATA_ROOT = os.getenv('MINERL_DATA_ROOT', 'data/')
 
