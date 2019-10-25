@@ -179,7 +179,7 @@ def run_training(
 
     # Recognize and use docker volume if one is passed as an argument
     if not options.docker_target_name:
-        model_path = "./models/{run_id}-{sub_id}".format(
+        model_path = "./train/{run_id}-{sub_id}".format(
             run_id=options.run_id, sub_id=sub_id
         )
         summaries_dir = "./summaries"

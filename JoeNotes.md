@@ -40,3 +40,13 @@ replace line (12)
 with
 
 * from minerl_demo_to_buffer import demo_to_buffer
+
+## mlagents/trainers/learn.py
+
+replace line (182)
+
+* `model_path = "./models/{run_id}-{sub_id}".format(`
+
+to
+
+* `model_path = "./train/{run_id}-{sub_id}".format(`

@@ -14,8 +14,8 @@ import coloredlogs
 # coloredlogs.install(logging.DEBUG)
 
 # All the evaluations will be evaluated on MineRLObtainDiamond-v0 environment
-# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainDiamond-v0')
-MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLTreechop-v0')
+MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainDiamond-v0')
+# MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLTreechop-v0')
 # MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLNavigate-v0')
 # MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLNavigateDense-v0')
 # MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLNavigateExtreme-v0')
@@ -116,16 +116,21 @@ def main():
     from trainer_mlagents import main as unity_main
     import sys
     argv = sys.argv[1:]
-    # argv.append('config/mlagents_gail_config.yaml') # PPO
-    argv.append('config/mlagents_sac_gail_config.yaml') # SAC
+    argv.append('config/eval_mlagents_gail_config.yaml') # PPO
+    # argv.append('config/eval_mlagents_sac_gail_config.yaml') # SAC
     # argv.append('--train')
     argv.append('--load')
     argv.append('--env='+MINERL_GYM_ENV)
     # argv.append('--run-id=MineRLNavigateDense-061')
-    argv.append('--run-id=MineRLTreechop-034')
+    # argv.append('--run-id=MineRLTreechop-034')
+    argv.append('--run-id=MineRLObtainDiamond-ppo-002')
     argv.append('--num-envs='+str(MINERL_TRAINING_MAX_INSTANCES))
     # argv.append('--num-envs=2')
     # argv.append('--num-envs=5')
+
+    EVALUATION_STAGE = os.getenv('EVALUATION_STAGE', 'testing')
+    os.environ['EVALUATION_STAGE']=EVALUATION_STAGE
+
 
     from minerl.env.malmo import InstanceManager
     try:

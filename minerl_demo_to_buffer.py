@@ -31,7 +31,9 @@ def demo_to_buffer(
     """
 
     # early exit if inference mode
-    if True:
+    # export EVALUATION_STAGE='testing'
+    EVALUATION_STAGE = os.getenv('EVALUATION_STAGE', '')
+    if EVALUATION_STAGE == 'testing':
         demo_buffer = Buffer()
         brain_params = MineRLToMLAgentWrapper.get_brain_params(file_path)
         return brain_params, demo_buffer
