@@ -126,7 +126,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
                 # self._mlagent_action_space['camera_left_right']=['noop','camera_left','camera_right']
                 # self._mlagent_action_space['camera_up_down']=['noop','camera_up','camera_down']
                 # VIEW_STEP=90
-                VIEW_STEP=9
+                VIEW_STEP=1
                 i = list(self._mlagent_action_space.keys()).index('camera_left_right')
                 v = action_in[i]
                 act_v[1] = -VIEW_STEP if v == 1 else VIEW_STEP if v == 2 else 0
@@ -136,8 +136,9 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
             # print(act_k, act_v)
             try:
                 for i,k in enumerate(act_v):
-                    if k == -1:
-                        raise NotImplementedError('_process_action key error '+ act_k)
+                    pass
+                    # if k == -1:
+                    #     raise NotImplementedError('_process_action key error '+ act_k)
             except TypeError:
                 if act_v == -1:
                     raise NotImplementedError('_process_action key error '+ act_k)
@@ -157,7 +158,7 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
         action = np.zeros(len(self._mlagent_action_space),dtype=int)
         i = 0
         for k,v in self._mlagent_action_space.items():
-            VIEW_STEP=9
+            VIEW_STEP=1
             if k == 'camera_left_right':
                 velocity = action_in['camera'][1]
                 rand = np.random.random_sample() * VIEW_STEP
@@ -277,9 +278,51 @@ class MineRLToMLAgentWrapper(gym.Wrapper):
                 v = ob['pov']
                 v = v.reshape(1,v.shape[0],v.shape[1],v.shape[2])
                 vis_obs = v
+            elif k == 'equipped_items':
+                v = float(ob['equipped_items']['mainhand']['damage'])
+                max_damage = int(ob['equipped_items']['mainhand']['maxDamage'])
+                v = v if max_damage == 0 else v / max_damage
+                vector_obs.append(v)
+                num_items = 9
+                types=['none','air','wooden_axe','wooden_pickaxe','stone_axe','stone_pickaxe','iron_axe','iron_pickaxe','other']
+                item_type = ob['equipped_items']['mainhand']['type']
+                if type(item_type) is str:
+                    item_type = types.index(item_type)
+                item_type = np.array(int(item_type))
+                item_type_onehot = np.squeeze(np.eye(num_items)[item_type.reshape(-1)])
+                vector_obs.extend(item_type_onehot.tolist())
+            elif k == 'inventory':
+                inventory = np.array([b for a,b in ob['inventory'].items()])
+                has_one_item = np.clip(inventory,0,1)
+                num_items = np.clip(inventory,0,10)/10
+                vector_obs.extend(has_one_item.tolist())
+                vector_obs.extend(num_items.tolist())
+                
+                # OrderedDict([('coal', 0), ('cobblestone', 4), ('crafting_table', 1), ('dirt', 10), ('furnace', 1), ('iron_axe', 0), 
+                # ('iron_ingot', 0), ('iron_ore', 8), ('iron_pickaxe', 0), ('log', 0), ('planks', 15), ('stick', 0), ('stone', 0), ('stone_axe', 0), ...])
+                # 2 planks for stick
+                v = 1 if ob['inventory']['planks'] >= 2 else 0
+                vector_obs.append(v)
+                # 4 planks for crafting table
+                v = 1 if ob['inventory']['planks'] >= 4 else 0
+                vector_obs.append(v)
+                # 3 planks and two sticks for wooden sword
+                v = 1 if ob['inventory']['planks'] >= 3 and ob['inventory']['stick'] >= 2 else 0
+                vector_obs.append(v)
+                # 8 cobblestones for furnace
+                v = 1 if ob['inventory']['cobblestone'] >= 8 else 0
+                vector_obs.append(v)
+                # 3 cobblestone and two sticks for stone pick axe
+                v = 1 if ob['inventory']['cobblestone'] >= 3 and ob['inventory']['stick'] >= 2 else 0
+                vector_obs.append(v)
+                # 3 iron and two sticks for iron pick axe
+                v = 1 if ob['inventory']['iron_ingot'] >= 3 and ob['inventory']['stick'] >= 2 else 0
+                vector_obs.append(v)
+
             elif type(v) is dict or type(v) is OrderedDict:
                 for a,b in ob['inventory'].items():
                     vector_obs.append((float)(b))
+                inventory = np.array([b for a,b in ob['inventory'].items()])
             else:
                 vector_obs.append((float)(v))
         vector_obs = np.array(vector_obs)

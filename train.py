@@ -31,7 +31,8 @@ MINERL_GYM_ENV = os.getenv('MINERL_GYM_ENV', 'MineRLObtainDiamond-v0')
 # You need to ensure that your submission is trained in under MINERL_TRAINING_MAX_STEPS steps
 MINERL_TRAINING_MAX_STEPS = int(os.getenv('MINERL_TRAINING_MAX_STEPS', 8000000))
 # You need to ensure that your submission is trained by launching less than MINERL_TRAINING_MAX_INSTANCES instances
-MINERL_TRAINING_MAX_INSTANCES = int(os.getenv('MINERL_TRAINING_MAX_INSTANCES', 5))
+# MINERL_TRAINING_MAX_INSTANCES = int(os.getenv('MINERL_TRAINING_MAX_INSTANCES', 5))
+MINERL_TRAINING_MAX_INSTANCES = int(os.getenv('MINERL_TRAINING_MAX_INSTANCES', 1))
 # You need to ensure that your submission is trained within allowed training time.
 # Round 1: Training timeout is 15 minutes
 # Round 2: Training timeout is 4 days
@@ -119,10 +120,11 @@ def main():
     argv.append('config/mlagents_gail_config.yaml') # PPO
     # argv.append('config/mlagents_sac_gail_config.yaml') # SAC
     argv.append('--train')
+    # argv.append('--load')
     argv.append('--env='+MINERL_GYM_ENV)
     # argv.append('--run-id=MineRLNavigateDense-061')
     # argv.append('--run-id=MineRLObtainDiamond-002')
-    argv.append('--run-id=MineRLObtainDiamond-ppo-003')
+    argv.append('--run-id=MineRLObtainDiamond-ppo-023')
     argv.append('--num-envs='+str(MINERL_TRAINING_MAX_INSTANCES))
     # argv.append('--num-envs=2')
     # argv.append('--num-envs=5')

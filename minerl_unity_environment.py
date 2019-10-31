@@ -37,7 +37,8 @@ from minerl_to_mlagent_wrapper import MineRLToMLAgentWrapper
 from sohojoe_wrappers import (
     KeyboardControlWrapper, PruneActionsWrapper, PruneVisualObservationsWrapper,
     VisualObsAsFloatWrapper, NormalizeObservationsWrapper, HardwireActionsWrapper,
-    RefineObservationsWrapper, ResetOnDoneWrapper, FrameStackMono
+    RefineObservationsWrapper, ResetOnDoneWrapper, FrameStackMono, DingRewardOnDoneWrapper,
+    EarlyExitWrapper
 )
 from sys import platform
 
@@ -124,9 +125,13 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             env = MineRLToMLAgentWrapper(env, seeds[i])
             env = RefineObservationsWrapper(env)
             env = NormalizeObservationsWrapper(env)
-            # if self.worker_id is 0:
-            #     env = KeyboardControlWrapper(env)
+            
+            VISUALIZE = bool(os.getenv('VISUALIZE', None))
+            if VISUALIZE and self.worker_id is 0:
+                env = KeyboardControlWrapper(env)
+            
             # env = HardwireActionsWrapper(env)
+
             env = PruneActionsWrapper(env, [
                 # 'attack_jump'
                 # ,'camera_left_right'
@@ -140,6 +145,11 @@ class MineRLUnityEnvironment(BaseUnityEnvironment):
             # env = VisualObsAsFloatWrapper(env)
 
             env = FrameStackMono(env, 2, 10)
+
+            EVALUATION_STAGE = os.getenv('EVALUATION_STAGE', '')
+            if EVALUATION_STAGE != 'testing':
+                env = EarlyExitWrapper(env)
+                env = DingRewardOnDoneWrapper(env)
 
             # note: should be the last wrapper
             env = ResetOnDoneWrapper(env)

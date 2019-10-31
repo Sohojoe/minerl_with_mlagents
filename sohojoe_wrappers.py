@@ -462,8 +462,8 @@ class NormalizeObservationsWrapper(gym.Wrapper):
             v = brain_info.vector_observations[0][i]
             if k in ['compassAngle']:
                 v = v/180.
-            if k in ['inventory']:
-                v = v/5. # 5 is a lot of an object
+            # if k in ['inventory']:
+            #     v = v/5. # 5 is a lot of an object
             brain_info.vector_observations[0][i] = v
         return brain_info
 
@@ -750,3 +750,126 @@ class FrameStackMono(gym.Wrapper):
         vector_obs = np.array(vector_obs)
         vector_obs = vector_obs.reshape(1, vector_obs.shape[0]*vector_obs.shape[1])
         return vector_obs
+
+class DingRewardOnDoneWrapper(gym.Wrapper):
+    def __init__(self, env):
+        super(DingRewardOnDoneWrapper, self).__init__(env)   
+        self._parent_brain_parameters = env.brain_parameters
+        self._brain_parameters = env.brain_parameters
+
+    def _process_action(self, raw_action_in):
+        return raw_action_in
+
+    def _process_brain_info(self, brain_info:BrainInfo, raw_action_in=None):
+        for i in range(len(brain_info.local_done)):
+            if brain_info.local_done[i]:
+                brain_info.rewards[i] -=1
+        return brain_info
+
+    def process_demonstrations(self, brain_info):
+        # revert action
+        # procress brain_info
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info
+
+    def step(self, raw_action_in):
+        action_in = self._process_action(raw_action_in)
+        brain_info = self.env.step(action_in)
+        brain_info = self._process_brain_info(brain_info, raw_action_in)
+        return brain_info
+
+    def reset(self, **kwargs):
+        brain_info =  self.env.reset(**kwargs)
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info
+
+    @property
+    def brain_parameters(self) ->BrainParameters:
+        return self._brain_parameters
+
+
+
+    # 206,376,37,23,124,75,136,349,6232,1898,185,1020
+    # 276,1014,99,3,146,60,218,375,2584,729,120,75
+    # 299,371,42,127,126,983,147,105,648,710,83,1101
+    # 106,683,170,111,105,108,229,2662,1455,705,198,49
+    # 201,713,58,91,149,622,288,125,671,1943,113,4067
+    # 54,1072,30,353,65,321,1986,2299,254,776,222,137
+    # 81,505,74,215,104,270,165,524,607,1363,207,5197
+    # 94,816,59,3,285,58,161,485,893,1161,168,1274
+    # 62,944,66,72,183,317,1128,221,3057,784,116,816
+    # 251,1155,76,114,162,487,152,1592,185,423,613,3336
+    # 506,331,342,145,486,2833,2288,352,1496,1523,169,68
+    # 445,277,83,122,87,283,190,1552,139,792,116,320
+    # 318,1409,80,494,223,538,931,1105,516,1090,138,2534
+    # 422,987,89,151,113,353,156,2158,601,898,193,4332
+    # 528,930,53,235,89,546,1209,213,2917,684,127,44
+    # 342,433,55,84,105,434,307,392,358,756,388,4740
+    # 109,353,44,82,63,316,470,1194,250,670,75,1524
+    # 121,695,42,111,53,341,602,144,98,1787,188,2028
+    # 98,855,87,3,173,71,428,4490,173,758,179,1694
+    # 73,670,79,192,57,272,116,622,217,678,150,3635
+    # 282,1742,58,3,156,64,176,1829,1997,878,1129,2423
+    # 1656,903,56,101,88,388,1891,804,1858,675,96,64
+    # 217,928,97,17,197,118,115,3872,1054,718,111,3446
+    # 117,406,49,114,47,238,450,52,369,3474,352,444
+    # 209,1051,76,71,216,905,191,3026,228,826,103,4716
+    # 740,208,52,110,144,893,250,102,365,404,2086,4266
+    # 281,1296,65,3,165,154,172,1289,282,721,107,6449
+    # 56,663,25,90,44,604,490,344,629,979,221,1316
+    # 333,878,38,63,340,379,1846,79,175,786,69,5167
+    # 71,785,112,118,78,215,1755,46,163,1222,3010,401
+    # 409,346,176,86,90,378,169,65,439,694,80,1206
+    # 89,765,38,104,478,295,294,1844,3101,1546,68,2950
+    # 
+    # Ave	283	768	78	113	154	435	597	1072	1063	1033	349	2214
+    # StdDiv	296	351	58	101	108	493	647	1158	1297	590	612	1866
+    # 
+    # 579,1119,137,214,262,928,1244,2230,2360,1623,961,4080
+class EarlyExitWrapper(gym.Wrapper):
+    def __init__(self, env):
+        super(EarlyExitWrapper, self).__init__(env)   
+        self._parent_brain_parameters = env.brain_parameters
+        self._brain_parameters = env.brain_parameters
+        self._steps_since_reward = 0
+        # self._max_steps = [579,1119,137,214,262,928,1244,2230,2360,1623,961,4080000]
+        self._max_steps = [1000,1119,500,500,500,928,1244,2230,2360,1623,961,4080000]
+
+    def _process_action(self, raw_action_in):
+        return raw_action_in
+
+    def _process_brain_info(self, brain_info:BrainInfo, raw_action_in=None):
+        return brain_info
+
+    def process_demonstrations(self, brain_info):
+        # revert action
+        # procress brain_info
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info
+
+    def step(self, raw_action_in):
+        action_in = self._process_action(raw_action_in)
+        brain_info = self.env.step(action_in)
+        brain_info = self._process_brain_info(brain_info, raw_action_in)
+        self._steps_since_reward +=1
+        if brain_info.rewards[0] != 0:
+            self._steps_since_reward_idx += 1
+            if self._steps_since_reward_idx >= len(self._max_steps)-1:
+                self._steps_since_reward_idx = len(self._max_steps)-1
+            self._steps_since_reward = 0
+        else:
+            if self._steps_since_reward > self._max_steps[self._steps_since_reward_idx]:
+                brain_info.local_done = [True for i in brain_info.local_done]
+
+        return brain_info
+
+    def reset(self, **kwargs):
+        self._steps_since_reward = 0
+        self._steps_since_reward_idx = 0
+        brain_info =  self.env.reset(**kwargs)
+        brain_info = self._process_brain_info(brain_info)
+        return brain_info
+
+    @property
+    def brain_parameters(self) ->BrainParameters:
+        return self._brain_parameters
