@@ -4,7 +4,6 @@ I'm open-sourcing my code for the [mine_rl competition](https://github.com/miner
 
 My main contribition is the wrapper for the Unity's [ML-Agents](https://github.com/Unity-Technologies/ml-agents) python code, but note that I never got good results so either there are some bugs or tweaks to the hyperparams are needed.
 
-
 # Setup environment
 
 Note - edit between tensorflow and tensorflow-gpu
@@ -27,7 +26,16 @@ pip install -e .
 cd ..
 ```
 
-# update ml-agents
+
+
+# To train
+```bash
+source activate minerl_challenge
+python train.py
+```
+
+
+# Changes to ml-agents
 
 ## notes
 
