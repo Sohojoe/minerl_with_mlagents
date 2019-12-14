@@ -1,4 +1,4 @@
-# MineRL+ML-Agents
+# MineRL with MLAgents
 
 I'm open-sourcing my code for the [mine_rl competition](https://github.com/minerllabs/minerl) for NeurIPS 2019.
 
